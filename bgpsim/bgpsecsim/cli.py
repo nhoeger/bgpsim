@@ -30,6 +30,7 @@ def check_graph(as_rel_file):
     else:
         print("Graph has no cycles")
 
+
 @cli.command()
 @click.argument('as-rel-file')
 @click.argument('origin-asn', type=int)

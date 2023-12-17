@@ -7,9 +7,9 @@ export PATH="$PATH:/home/$USER/.local/bin"
 apt install git -y
 #Replace git clone with link to your repository
 #Creation of Personal acces token necessary to clone repository by command line
-git clone #Link to repository
+#git clone #Link to repository
 #Replace with Name of your repository you cloned to cd inside there
-cd # directory name of cloned repository
+#cd # directory name of cloned repository
 #git checkout if neccessary as you need to change the branch of the repository
 git checkout #Name of branch
 git pull

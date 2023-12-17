@@ -262,6 +262,9 @@ class ASGraph(object):
             route = routes.popleft()
             asys = route.final
             for neighbor in asys.learn_route(route):
+                # TODO: Check for functionality
+                t = asys.as_id
+
                 routes.append(asys.forward_route(route, neighbor))
 
     def hijack_n_hops(self, victim: AS, attacker: AS, n: int) -> None:

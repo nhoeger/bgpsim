@@ -1,6 +1,8 @@
 from typing import Callable, Generator
 
+#from bgpsecsim.asys import Relation, Route, RoutingPolicy
 from bgpsecsim.asys import Relation, Route, RoutingPolicy
+
 
 class DefaultPolicy(RoutingPolicy):
     def __init__(self):
@@ -34,7 +36,7 @@ class DefaultPolicy(RoutingPolicy):
         first_hop_rel = asys.get_relation(route.first_hop)
         assert first_hop_rel is not None
 
-        #Route is forwarded either if was received by a customer or if it is going to be sent to a customer.
+        # Route is forwarded either if was received by a customer or if it is going to be sent to a customer.
         return first_hop_rel == Relation.CUSTOMER or relation == Relation.CUSTOMER
 
     # Generators are iterators, a kind of iterable you can only iterate over once.
@@ -44,6 +46,7 @@ class DefaultPolicy(RoutingPolicy):
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
             return relation.value if relation else -1
+
         yield local_pref
         # 2. AS-path length
         yield lambda route: route.length
@@ -85,6 +88,7 @@ class BGPsecHighSecPolicy(DefaultPolicy):
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
             return relation.value if relation else -1
+
         yield local_pref
         # 2. AS-path length
         yield lambda route: route.length
@@ -106,6 +110,7 @@ class BGPsecMedSecPolicy(DefaultPolicy):
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
             return relation.value if relation else -1
+
         yield local_pref
         # Prefer authenticated routes
         yield lambda route: not route.authenticated
@@ -129,6 +134,7 @@ class BGPsecLowSecPolicy(DefaultPolicy):
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
             return relation.value if relation else -1
+
         yield local_pref
         # 2. AS-path length
         yield lambda route: route.length
@@ -136,6 +142,7 @@ class BGPsecLowSecPolicy(DefaultPolicy):
         yield lambda route: not route.authenticated
         # 3. Next hop AS number
         yield lambda route: route.first_hop.as_id
+
 
 # Rules are all the same for RouteLeakPolicy and DefaultPolicy, except that RouteLeakPolicy forwards routes to any peer.
 class RouteLeakPolicy(RoutingPolicy):
@@ -166,10 +173,10 @@ class RouteLeakPolicy(RoutingPolicy):
         return False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
-#        asys = route.final
-#        first_hop_rel = asys.get_relation(route.first_hop)
-#        assert first_hop_rel is not None
-        return True #Forward route to any peer regardless of relationship (not respecting Gao-Rexford model, hence constituting a RouteLeak).
+        #        asys = route.final
+        #        first_hop_rel = asys.get_relation(route.first_hop)
+        #        assert first_hop_rel is not None
+        return True  # Forward route to any peer regardless of relationship (not respecting Gao-Rexford model, hence constituting a RouteLeak).
 
     # Generators are iterators, a kind of iterable you can only iterate over once.
     # Generators do not store all the values in memory, they generate the values on the fly:
@@ -178,6 +185,7 @@ class RouteLeakPolicy(RoutingPolicy):
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
             return relation.value if relation else -1
+
         yield local_pref
         # 2. AS-path length
         yield lambda route: route.length
@@ -210,12 +218,14 @@ def perform_ASPA_algorithm(route):
         else:
             result = 'Valid'
             for i, curr_asys in enumerate(route.path):
-                if i + 2 < len(route.path):  # Verifying AS contained in route AND hop towards verifying AS is known and not checked in ASPA algorithm
+                if i + 2 < len(
+                        route.path):  # Verifying AS contained in route AND hop towards verifying AS is known and not checked in ASPA algorithm
                     next_asys = route.path[i + 1]
                     # print('Curr AS: ', curr_asys.as_id)
                     # print('Curr AS ASPA', curr_asys.aspa)
                     # print('Next AS: ', next_asys.as_id)
-                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[1]:  # ASPA present but upstream not contained in provider list
+                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[
+                        1]:  # ASPA present but upstream not contained in provider list
                         # Invalid
                         result = 'Invalid'
                         break
@@ -237,7 +247,8 @@ def perform_ASPA_algorithm(route):
         # Step3 - If 1 ≤ N ≤ 2, then the procedure halts with the outcome "Valid". Else, continue.
         if len(route.path) < 2:  # case never happens
             raise Exception('Route length below verifyable!')
-        elif len(route.path) == 2 or len(route.path) == 3:  # the route object also contains the AS that currently validates as destination
+        elif len(route.path) == 2 or len(
+                route.path) == 3:  # the route object also contains the AS that currently validates as destination
             # Length 2: This case covers an upstream sending a route directly.
             # Length 3: This case covers essentially three scenarios. The upstream of the verifying AS receives the route either from a customer, a peer, or it's upstream. All trivially valid cases.
             result = 'Valid'
@@ -253,12 +264,14 @@ def perform_ASPA_algorithm(route):
             # Find u_min
             u_min = len(route.path)  # Set u_min to N+1, but verifying AS is included which is why we skip +1
             for i, curr_asys in enumerate(route.path):
-                if i + 2 < len(route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
+                if i + 2 < len(
+                        route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
                     next_asys = route.path[i + 1]
                     # print('Curr AS: ', curr_asys.as_id)
                     # print('Curr AS ASPA', curr_asys.aspa)
                     # print('Next AS: ', next_asys.as_id)
-                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[1]:  # ASPA present but next_asys not contained in provider list
+                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[
+                        1]:  # ASPA present but next_asys not contained in provider list
                         u_min = route.path.index(next_asys) + 1  # since index returns position in array starting with 0
                         break
 
@@ -267,20 +280,22 @@ def perform_ASPA_algorithm(route):
             for i, curr_asys in enumerate(reversed(route.path)):
                 if i == 0:  # skip first AS as it is the verifying AS
                     continue
-                if i + 1 < len(route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
+                if i + 1 < len(
+                        route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
                     next_asys = list(reversed(route.path))[i + 1]
                     # print('Curr AS: ', curr_asys.as_id)
                     # print('Curr AS ASPA', curr_asys.aspa)
                     # print('Next AS: ', next_asys.as_id)
-                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[1]:  # ASPA present but next_asys not contained in provider list
+                    if curr_asys.aspa != None and not next_asys.as_id in curr_asys.aspa[
+                        1]:  # ASPA present but next_asys not contained in provider list
                         v_max = route.path.index(next_asys) + 1
                         break
 
             if u_min <= v_max:
                 result = 'Invalid'
-                #return result # To avoid overwriting with possibly other results
+                # return result # To avoid overwriting with possibly other results
 
-            if result != 'Invalid': # To avoid overwriting with possibly other results
+            if result != 'Invalid':  # To avoid overwriting with possibly other results
 
                 # Step5 - Up-ramp: For 2 ≤ i ≤ N, determine the largest K such that
                 #        hop(AS(i-1), AS(i)) = "Provider+" for each i in the range 2 ≤ i ≤
@@ -289,12 +304,14 @@ def perform_ASPA_algorithm(route):
                 # Find largest k
                 k = 1
                 for i, curr_asys in enumerate(route.path):
-                    if i + 2 < len(route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
+                    if i + 2 < len(
+                            route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
                         next_asys = route.path[i + 1]
                         # print('Curr AS: ', curr_asys.as_id)
                         # print('Curr AS ASPA', curr_asys.aspa)
                         # print('Next AS: ', next_asys.as_id)
-                        if curr_asys.aspa != None and next_asys.as_id in curr_asys.aspa[1]:  # ASPA present but next_asys not contained in provider list
+                        if curr_asys.aspa != None and next_asys.as_id in curr_asys.aspa[
+                            1]:  # ASPA present but next_asys not contained in provider list
                             k = route.path.index(next_asys) + 1  # since index returns position in array starting with 0
                         else:
                             break
@@ -308,12 +325,14 @@ def perform_ASPA_algorithm(route):
                 for i, curr_asys in enumerate(reversed(route.path)):
                     if i == 0:  # skip first AS as it is the verifying AS
                         continue
-                    if i + 1 < len(route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
+                    if i + 1 < len(
+                            route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
                         next_asys = list(reversed(route.path))[i + 1]
                         # print('Curr AS: ', curr_asys.as_id)
                         # print('Curr AS ASPA', curr_asys.aspa)
                         # print('Next AS: ', next_asys.as_id)
-                        if curr_asys.aspa != None and next_asys.as_id in curr_asys.aspa[1]:  # ASPA present but next_asys not contained in provider list
+                        if curr_asys.aspa != None and next_asys.as_id in curr_asys.aspa[
+                            1]:  # ASPA present but next_asys not contained in provider list
                             l = route.path.index(next_asys) + 1
                         else:
                             break
@@ -326,7 +345,7 @@ def perform_ASPA_algorithm(route):
     else:
         raise Exception("Unknown relationship type", relation)
 
-    #print("Final ASPA validation result is: ", result)
+    # print("Final ASPA validation result is: ", result)
     if False:
         print("Final ASPA validation result is: ", result)
         print("Direction: ", relation)
@@ -359,7 +378,8 @@ def perform_ASCONES_algorithm(route):
         # Step3 - If N = 1, then the procedure halts with the outcome "Valid". Else, continue.
         if len(route.path) < 2:  # case never happens
             raise Exception('Route length below verifyable!')
-        elif len(route.path) == 2:  # the route object also contains the AS that currently validates as destination. We know this must be a customer and don´t need AS-Cones for it.
+        elif len(
+                route.path) == 2:  # the route object also contains the AS that currently validates as destination. We know this must be a customer and don´t need AS-Cones for it.
             result = 'Valid'
         # Step4 - At this step, N ≥ 2. If there is an i such that 2 ≤ i ≤ N and hop(AS(i-1), AS(i)) = "Not Provider+", then the procedure halts with the outcome "Invalid". Else, continue.
         # Step5 - If there is an i such that 2 ≤ i ≤ N and hop(AS(i-1), AS(i)) = "No Attestation", then the procedure halts with the outcome "Unknown". Else, the procedure halts with the outcome "Valid".
@@ -393,7 +413,8 @@ def perform_ASCONES_algorithm(route):
         # Step3 - If 1 ≤ N ≤ 2, then the procedure halts with the outcome "Valid". Else, continue.
         if len(route.path) < 2:  # case never happens
             raise Exception('Route length below verifyable!')
-        elif len(route.path) == 2 or len(route.path) == 3:  # the route object also contains the AS that currently validates as destination
+        elif len(route.path) == 2 or len(
+                route.path) == 3:  # the route object also contains the AS that currently validates as destination
             # Length 2: This case covers an upstream sending a route directly.
             # Length 3: This case covers essentially three scenarios. The upstream of the verifying AS receives the route either from a customer, a peer, or it's upstream. All trivially valid cases.
             result = 'Valid'
@@ -409,12 +430,14 @@ def perform_ASCONES_algorithm(route):
             # Find u_min
             u_min = len(route.path)  # Set u_min to N+1, but verifying AS is included which is why we skip +1
             for i, curr_asys in enumerate(route.path):
-                if i + 2 < len(route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
+                if i + 2 < len(
+                        route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
                     next_asys = route.path[i + 1]
-                    #print('Curr AS: ', curr_asys.as_id)
-                    #print('Next AS: ', next_asys.as_id)
-                    #print('Next AS ASCONES', next_asys.ascones)
-                    if next_asys.ascones != None and not curr_asys.as_id in next_asys.ascones[1]:  # ASCONES present but curr_asys not contained in customer list
+                    # print('Curr AS: ', curr_asys.as_id)
+                    # print('Next AS: ', next_asys.as_id)
+                    # print('Next AS ASCONES', next_asys.ascones)
+                    if next_asys.ascones != None and not curr_asys.as_id in next_asys.ascones[
+                        1]:  # ASCONES present but curr_asys not contained in customer list
                         u_min = route.path.index(next_asys) + 1  # since index returns position in array starting with 0
                         break
 
@@ -423,12 +446,14 @@ def perform_ASCONES_algorithm(route):
             for i, curr_asys in enumerate(reversed(route.path)):
                 if i == 0:  # skip first AS as it is the verifying AS
                     continue
-                if i + 1 < len(route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
+                if i + 1 < len(
+                        route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
                     next_asys = list(reversed(route.path))[i + 1]
-                    #print('Curr AS: ', curr_asys.as_id)
-                    #print('Next AS: ', next_asys.as_id)
-                    #print('Next AS ASCONES', next_asys.ascones)
-                    if next_asys.ascones != None and not curr_asys.as_id in next_asys.ascones[1]:  # ASCONES present but curr_asys not contained in customer list
+                    # print('Curr AS: ', curr_asys.as_id)
+                    # print('Next AS: ', next_asys.as_id)
+                    # print('Next AS ASCONES', next_asys.ascones)
+                    if next_asys.ascones != None and not curr_asys.as_id in next_asys.ascones[
+                        1]:  # ASCONES present but curr_asys not contained in customer list
                         v_max = route.path.index(next_asys) + 1
                         break
 
@@ -444,12 +469,14 @@ def perform_ASCONES_algorithm(route):
                 # Find largest k
                 k = 1
                 for i, curr_asys in enumerate(route.path):
-                    if i + 2 < len(route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
+                    if i + 2 < len(
+                            route.path):  # Verifying AS contained in route AND make sure we are not at the end already and produce an array out-of-bounds exception
                         next_asys = route.path[i + 1]
                         # print('Curr AS: ', curr_asys.as_id)
                         # print('Next AS: ', next_asys.as_id)
                         # print('Next AS ASCONES', next_asys.ascones)
-                        if next_asys.ascones != None and curr_asys.as_id in next_asys.ascones[1]:  # ASCONES present but curr_asys not contained in customer list
+                        if next_asys.ascones != None and curr_asys.as_id in next_asys.ascones[
+                            1]:  # ASCONES present but curr_asys not contained in customer list
                             k = route.path.index(next_asys) + 1  # since index returns position in array starting with 0
                         else:
                             break
@@ -463,12 +490,14 @@ def perform_ASCONES_algorithm(route):
                 for i, curr_asys in enumerate(reversed(route.path)):
                     if i == 0:  # skip first AS as it is the verifying AS
                         continue
-                    if i + 1 < len(route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
+                    if i + 1 < len(
+                            route.path):  # Make sure we are not at the end already and produce an array out-of-bounds exception
                         next_asys = list(reversed(route.path))[i + 1]
                         # print('Curr AS: ', curr_asys.as_id)
                         # print('Next AS: ', next_asys.as_id)
                         # print('Next AS ASCONES', next_asys.ascones)
-                        if next_asys.ascones != None and curr_asys.as_id in next_asys.ascones[1]:  # ASCONES present but curr_asys not contained in customer list
+                        if next_asys.ascones != None and curr_asys.as_id in next_asys.ascones[
+                            1]:  # ASCONES present but curr_asys not contained in customer list
                             l = route.path.index(next_asys) + 1
                         else:
                             break
@@ -483,6 +512,21 @@ def perform_ASCONES_algorithm(route):
 
     return result
 
+
+def perform_down_only(route):
+    relation_to_sender = route.final.get_relation(route.first_hop)
+    down_only = len(route.local_data_part_do) != 0
+    if down_only and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+        return False
+    if down_only and relation_to_sender == Relation.PEER:
+        for i in route.local_data_part_do:
+            if i != route.final.as_id:
+                return False
+    if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
+        route.local_data_part_do = route.first_hop
+    return True
+
+
 class ASPAPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'ASPAPolicy'
@@ -494,6 +538,7 @@ class ASPAPolicy(DefaultPolicy):
         # Accepts the route if none of the elements with ASPA activated has returned INVALID
         return super().accept_route(route) and not (result == 'Invalid')
 
+
 class ASCONESPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'ASCONESPolicy'
@@ -504,3 +549,20 @@ class ASCONESPolicy(DefaultPolicy):
 
         # Accepts the route if none of the elements with ASPA activated has returned INVALID
         return super().accept_route(route) and not (result == 'Invalid')
+
+
+class DownOnlyPolicy(DefaultPolicy):
+    def __init__(self):
+        self.name = 'DownOnlyPolicy'
+
+    def accept_route(self, route: Route) -> bool:
+        result = perform_down_only(route)
+        # Accepts the route if none of the elements with do has returned INVALID
+        return super().accept_route(route) and not (result == 'Invalid')
+
+    def prefer_route(self, current: Route, new: Route) -> bool:
+        # Todo: Add functionality
+        return False
+    def forward_to(self, route: Route, relation: Relation) -> bool:
+        # Todo: Add functionality
+        return False

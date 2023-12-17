@@ -1,4 +1,5 @@
 import abc
+import string
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -9,6 +10,8 @@ class Relation(Enum):
     CUSTOMER = 1
     PEER = 2
     PROVIDER = 3
+    RS_CLIENT = 4
+    ROUTE_SERVER = 5
 
 class AspaList:
     List['AS']
@@ -19,7 +22,7 @@ class AS(object):
     # __slots__ states which instance attributes you expect your object instances to have -> results in faster access
     __slots__ = [
         'as_id', 'neighbors', 'policy', 'publishes_rpki', 'publishes_path_end', 'bgp_sec_enabled',
-        'routing_table', 'aspa', 'aspa_enabled', 'ascones', 'ascones_enabled'
+        'routing_table', 'aspa', 'aspa_enabled', 'ascones', 'ascones_enabled', 'rlm_enabled', 'only_marking'
     ]
 
     as_id: AS_ID
@@ -35,6 +38,8 @@ class AS(object):
     aspa_enabled: bool
     ascones: ['AS_ID', ASConesList]
     ascones_enabled: bool
+    rlm_enabled: bool
+    only_marking: bool
 
     def __init__(
         # self represents the instance of the class
@@ -45,7 +50,9 @@ class AS(object):
         publishes_path_end: bool = False,
         bgp_sec_enabled: bool = False,
         aspa_enabled: bool = False,
-        ascones_enabled: bool = False
+        ascones_enabled: bool = False,
+        rlm_enabled: bool = False,
+        only_marking: bool = False,
     ):
         self.as_id = as_id
         self.policy = policy
@@ -58,13 +65,15 @@ class AS(object):
         self.aspa_enabled = aspa_enabled
         self.ascones = []
         self.ascones_enabled = ascones_enabled
+        self.rlm_enabled = rlm_enabled
+        self.only_marking = only_marking
         self.reset_routing_table()
         self.reset_rpki_objects()
 
     # -> marks return function annotation. So tells which type the function should return, but does not force it.
 
     def neighbor_counts_by_relation(self) -> Dict[Relation, int]:
-        # counts number of neoghbours of the current AS
+        # counts number of neighbours of the current AS
         counts = {relation: 0 for relation in Relation}
         for relation in self.neighbors.values():
             counts[relation] += 1
@@ -149,6 +158,10 @@ class AS(object):
             origin_invalid=route.origin_invalid,
             path_end_invalid=route.path_end_invalid,
             authenticated=route.authenticated and next_hop.bgp_sec_enabled,
+            local_data_part_do=[],
+            #local_data_part_l=0,
+            # Set Down Only Attribute
+            #local_data_part_do=self.as_id if self.rlm_enabled else 0
         )
 
     def reset_routing_table(self) -> None:
@@ -159,6 +172,7 @@ class AS(object):
             origin_invalid=False,
             path_end_invalid=False,
             authenticated=True,
+            local_data_part_do=[],
         )
 
     def reset_rpki_objects(self) -> None:
@@ -196,7 +210,7 @@ class AS(object):
             return self.ascones[1]
 
 class Route(object):
-    __slots__ = ['dest', 'path', 'origin_invalid', 'path_end_invalid', 'authenticated']
+    __slots__ = ['dest', 'path', 'origin_invalid', 'path_end_invalid', 'authenticated', 'local_data_part_do',]
 
     # Destination is an IP block that is owned by this AS. The AS_ID is the same as the origin's ID
     # for valid routes, but may differ in a hijacking attack.
@@ -208,6 +222,8 @@ class Route(object):
     path_end_invalid: bool
     # Whether the path is authenticated with BGPsec.
     authenticated: bool
+    # LocalDataPart1 also called DO, contains an ASN value
+    local_data_part_do: [int]
 
     def __init__(
         self,
@@ -216,12 +232,14 @@ class Route(object):
         origin_invalid: bool,
         path_end_invalid: bool,
         authenticated: bool,
+        local_data_part_do:[int],
     ):
         self.dest = dest
         self.path = path
         self.origin_invalid = origin_invalid
         self.path_end_invalid = path_end_invalid
         self.authenticated = authenticated
+        self.local_data_part_do = local_data_part_do if local_data_part_do is not None else []
 
 
 # @property is python way to create getter and setter method
