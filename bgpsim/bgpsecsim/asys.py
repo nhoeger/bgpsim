@@ -223,7 +223,7 @@ class Route(object):
     # Whether the path is authenticated with BGPsec.
     authenticated: bool
     # LocalDataPart1 also called DO, contains an ASN value
-    local_data_part_do: [int]
+    local_data_part_do: string
 
     def __init__(
         self,
@@ -232,14 +232,14 @@ class Route(object):
         origin_invalid: bool,
         path_end_invalid: bool,
         authenticated: bool,
-        local_data_part_do:[int],
+        local_data_part_do=None,
     ):
         self.dest = dest
         self.path = path
         self.origin_invalid = origin_invalid
         self.path_end_invalid = path_end_invalid
         self.authenticated = authenticated
-        self.local_data_part_do = local_data_part_do if local_data_part_do is not None else []
+        self.local_data_part_do = local_data_part_do if local_data_part_do is not None else ""
 
 
 # @property is python way to create getter and setter method
