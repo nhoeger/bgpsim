@@ -527,9 +527,12 @@ def perform_down_only(route):
         print("Second condition")
         for i in route.local_data_part_do.split():
             print("Iterating through do: " + i)
-            if i != route.final.as_id:
+            print("Comparing with: " + route.first_hop.as_id)
+            if i != route.first_hop.as_id:
                 print("No match: returning false.")
                 return False
+        print("All ASNs are the same as the sender ASN.")
+        return True
     if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
         print("Third condition")
         route.local_data_part_do += str(route.first_hop.as_id) + " "

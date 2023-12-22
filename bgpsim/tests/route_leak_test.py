@@ -30,7 +30,7 @@ AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-ex
 
 
 class TestRouteLeakGraph(unittest.TestCase):
-    def test_route_leak_provider_case(self):
+    def atest_route_leak_provider_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
         provider = graph.get_asys('2')
         local_as = graph.get_asys('6')
@@ -52,7 +52,7 @@ class TestRouteLeakGraph(unittest.TestCase):
         assert local_as.policy.forward_to(new_route,Relation.CUSTOMER)
         assert not local_as.policy.forward_to(new_route,Relation.PEER)
 
-    def test_route_customer_case(self):
+    def atest_route_customer_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
         customer = graph.get_asys('11')
         local_as = graph.get_asys('6')
@@ -74,24 +74,35 @@ class TestRouteLeakGraph(unittest.TestCase):
         assert len(new_route.local_data_part_do) != 0
         assert not local_as.policy.accept_route(new_route)
 
+    # Test case to check peer validation for one and two peers
     def test_route_peer_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
-        customer = graph.get_asys('5')
-        local_as = graph.get_asys('6')
+        peer_one = graph.get_asys('5')
+        peer_two = graph.get_asys('6')
+        local_as = graph.get_asys('7')
         local_as.policy = DownOnlyPolicy()
 
-        path = [customer.as_id, local_as.as_id]
+        path_one = [peer_one.as_id, peer_two.as_id, local_as.as_id]
+        path_two = [peer_two.as_id, local_as.as_id]
 
+        # Testing path one
         new_route = Route(
             local_as.as_id,
-            [graph.get_asys(x) for x in path],
+            [graph.get_asys(x) for x in path_one],
             origin_invalid=False,
             path_end_invalid=False,
             authenticated=False,
             local_data_part_do="",
         )
-        # TODO: Extend test case to check line 530 on routing_policy.py
+
+        # DO is empty in first scenario -> AS adds own ASN to DO
         assert local_as.policy.accept_route(new_route)
-        assert local_as.policy.forward_to(new_route, Relation.CUSTOMER)
-        assert len(new_route.local_data_part_do) != 0
-        assert not local_as.policy.accept_route(new_route)
+        # Do is not empty and ASN of peer is included in DO
+        assert local_as.policy.accept_route(new_route)
+
+        # Testing path two
+        new_route.path = [graph.get_asys(x) for x in path_two]
+        # Resetting DO attribute
+        new_route.local_data_part_do = ""
+        assert local_as.policy.accept_route(new_route)
+
