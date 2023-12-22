@@ -514,16 +514,27 @@ def perform_ASCONES_algorithm(route):
 
 
 def perform_down_only(route):
+    print("Performing Down Only")
     relation_to_sender = route.final.get_relation(route.first_hop)
     down_only = len(route.local_data_part_do) != 0
+    print("Relation: " + str(relation_to_sender))
+    print("DO Bool: " + str(down_only))
+    print("DO Atr: " + route.local_data_part_do)
     if down_only and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+        print("First condition")
         return False
     if down_only and relation_to_sender == Relation.PEER:
-        for i in route.local_data_part_do:
+        print("Second condition")
+        for i in route.local_data_part_do.split():
+            print("Iterating through do: " + i)
             if i != route.final.as_id:
+                print("No match: returning false.")
                 return False
     if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
-        route.local_data_part_do = route.first_hop
+        print("Third condition")
+        route.local_data_part_do += str(route.first_hop.as_id) + " "
+        print("New DO Atr: " + route.local_data_part_do)
+    print("Returning True...")
     return True
 
 
@@ -556,13 +567,30 @@ class DownOnlyPolicy(DefaultPolicy):
         self.name = 'DownOnlyPolicy'
 
     def accept_route(self, route: Route) -> bool:
+        print("Validating Route.")
         result = perform_down_only(route)
+        print("Result: " + str(result))
         # Accepts the route if none of the elements with do has returned INVALID
-        return super().accept_route(route) and not (result == 'Invalid')
+        print("Return Value " + str(super().accept_route(route) and not result))
+        print("Super: " + str(super().accept_route(route)))
+        return super().accept_route(route) and result
 
     def prefer_route(self, current: Route, new: Route) -> bool:
         # Todo: Add functionality
         return False
+
     def forward_to(self, route: Route, relation: Relation) -> bool:
-        # Todo: Add functionality
-        return False
+        print("Forwarding to...")
+        asn = route.final
+        first_hop_rel = asn.get_relation(route.first_hop)
+        assert first_hop_rel is not None
+        if route.local_data_part_do != "" and (relation == Relation.PEER or relation == Relation.PROVIDER):
+            print("Returning first False for forwarding.")
+            return False
+        if first_hop_rel == Relation.CUSTOMER or relation == Relation.CUSTOMER:
+            route.local_data_part_do += asn.as_id + " "
+            print("Returning True for forwarding: " + route.local_data_part_do)
+            return True
+        else:
+            print("Returning second False for forwarding.")
+            return False

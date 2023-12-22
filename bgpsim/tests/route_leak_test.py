@@ -8,7 +8,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy
 )
 import bgpsecsim.experiments as experiments
 import bgpsecsim.routing_policy as routing_policy
@@ -30,43 +30,68 @@ AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-ex
 
 
 class TestRouteLeakGraph(unittest.TestCase):
-    def route_leak_functionality(self):
-        graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
-        sent_from_provider = graph.get_asys('2')
-        sent_from_customer = graph.get_asys('5')
-        sent_from_client = graph.get_asys('11')
-        local_as = graph.get_asys('6')
-        send_to_provider = graph.get_asys('3')
-        send_to_customer = graph.get_asys('7')
-        send_to_client = graph.get_asys('12')
-
-        assert True == True
-
     def test_route_leak_provider_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
         provider = graph.get_asys('2')
         local_as = graph.get_asys('6')
-        send_to_provider = graph.get_asys('3')
-        send_to_customer = graph.get_asys('7')
-        send_to_client = graph.get_asys('12')
+        local_as.policy = DownOnlyPolicy()
 
         path = [provider.as_id, local_as.as_id]
 
-        #tmp.append(provider.as_id)
         new_route = Route(
-            local_as,
+            local_as.as_id,
             [graph.get_asys(x) for x in path],
             origin_invalid=False,
             path_end_invalid=False,
             authenticated=False,
-            local_data_part_do=[1,2],
+            local_data_part_do="",
         )
 
-        routing_policy.perform_down_only(new_route)
-        print("Testing...")
-        print("New Data part: " + new_route.local_data_part_do)
-        print("Origin Invalid: " + new_route.origin_invalid)
+        # routing_policy.perform_down_only(new_route)
+        assert not local_as.policy.forward_to(new_route,Relation.PROVIDER)
+        assert local_as.policy.forward_to(new_route,Relation.CUSTOMER)
+        assert not local_as.policy.forward_to(new_route,Relation.PEER)
 
-        #print(len(route.local_data_part_do))
+    def test_route_customer_case(self):
+        graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
+        customer = graph.get_asys('11')
+        local_as = graph.get_asys('6')
+        local_as.policy = DownOnlyPolicy()
 
-        assert True == True
+        path = [customer.as_id, local_as.as_id]
+
+        new_route = Route(
+            local_as.as_id,
+            [graph.get_asys(x) for x in path],
+            origin_invalid=False,
+            path_end_invalid=False,
+            authenticated=False,
+            local_data_part_do="",
+        )
+
+        assert local_as.policy.accept_route(new_route)
+        assert local_as.policy.forward_to(new_route, Relation.CUSTOMER)
+        assert len(new_route.local_data_part_do) != 0
+        assert not local_as.policy.accept_route(new_route)
+
+    def test_route_peer_case(self):
+        graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
+        customer = graph.get_asys('5')
+        local_as = graph.get_asys('6')
+        local_as.policy = DownOnlyPolicy()
+
+        path = [customer.as_id, local_as.as_id]
+
+        new_route = Route(
+            local_as.as_id,
+            [graph.get_asys(x) for x in path],
+            origin_invalid=False,
+            path_end_invalid=False,
+            authenticated=False,
+            local_data_part_do="",
+        )
+        # TODO: Extend test case to check line 530 on routing_policy.py
+        assert local_as.policy.accept_route(new_route)
+        assert local_as.policy.forward_to(new_route, Relation.CUSTOMER)
+        assert len(new_route.local_data_part_do) != 0
+        assert not local_as.policy.accept_route(new_route)
