@@ -30,7 +30,7 @@ AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-ex
 
 
 class TestRouteLeakGraph(unittest.TestCase):
-    def atest_route_leak_provider_case(self):
+    def test_route_leak_provider_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
         provider = graph.get_asys('2')
         local_as = graph.get_asys('6')
@@ -52,7 +52,7 @@ class TestRouteLeakGraph(unittest.TestCase):
         assert local_as.policy.forward_to(new_route,Relation.CUSTOMER)
         assert not local_as.policy.forward_to(new_route,Relation.PEER)
 
-    def atest_route_customer_case(self):
+    def test_route_customer_case(self):
         graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
         customer = graph.get_asys('11')
         local_as = graph.get_asys('6')
