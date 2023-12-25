@@ -1,6 +1,6 @@
 from typing import Callable, Generator
 
-#from bgpsecsim.asys import Relation, Route, RoutingPolicy
+# from bgpsecsim.asys import Relation, Route, RoutingPolicy
 from bgpsecsim.asys import Relation, Route, RoutingPolicy
 
 
@@ -515,16 +515,30 @@ def perform_ASCONES_algorithm(route):
 
 def perform_down_only(route):
     relation_to_sender = route.final.get_relation(route.first_hop)
-    down_only = len(route.local_data_part_do) != 0
+    down_only = route.local_data_part_do != ""
+    if down_only:
+        print("Down Only: ", route.local_data_part_do)
     if down_only and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+        print("Reason 1")
+        print("[Relation]: ", relation_to_sender, ";[Down_Only]: ", down_only)
         return False
     if down_only and relation_to_sender == Relation.PEER:
-        for i in route.local_data_part_do.split():
-            if i != route.first_hop.as_id:
-                return False
-        return True
+        #print("[Relation]: ", relation_to_sender, ";[Down_Only]: ", down_only, ";[Atr]: ", route.local_data_part_do, "; [Length]: ", len(route.local_data_part_do), "; [!=]: ", down_only)
+        if route.local_data_part_do != "":
+            for i in route.local_data_part_do.split():
+                if i != route.first_hop.as_id:
+                    print("Reason 2")
+                    return False
+            print("Reason 3")
+            return True
+        else:
+            print("Reason 4")
+            # TODO: Check if this is the right procedure
+            return False
     if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
-        route.local_data_part_do += str(route.first_hop.as_id) + " "
+        route.local_data_part_do += str(route.final.as_id) + " "
+        #print("[Added]: ", str(route.final.as_id))
+    #print("[Relation]: ", relation_to_sender, ";[Down_Only_Old]: ", down_only, ";[Down_Only_JIT]: ", (route.local_data_part_do != ""), ";[Atr]: ", route.local_data_part_do, "; [Sender_ID]: ", route.first_hop.as_id)
     return True
 
 
@@ -557,21 +571,27 @@ class DownOnlyPolicy(DefaultPolicy):
         self.name = 'DownOnlyPolicy'
 
     def accept_route(self, route: Route) -> bool:
+        super_result = super().accept_route(route)
         result = perform_down_only(route)
-        return super().accept_route(route) and result
-
-    def prefer_route(self, current: Route, new: Route) -> bool:
-        # Todo: Add functionality
-        return False
+        # if route.local_data_part_do != "":
+        # print("Local Data Part: ", route.local_data_part_do)
+        if not super_result and result:
+            print("Not accepting a route. DownOnlyAtr: ", route.local_data_part_do)
+            print("Reason: ", result, " [DownOnly] ; ", super_result, " [SuperResult].")
+        return super_result and result
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
+        super_forward = super().forward_to(route, relation)
         asn = route.final
         first_hop_rel = asn.get_relation(route.first_hop)
         assert first_hop_rel is not None
-        if route.local_data_part_do != "" and (relation == Relation.PEER or relation == Relation.PROVIDER):
-            return False
-        if first_hop_rel == Relation.CUSTOMER or relation == Relation.CUSTOMER:
-            route.local_data_part_do += str(asn.as_id) + " "
+        if super_forward:
+            if route.local_data_part_do != "" and (relation == Relation.PEER or relation == Relation.PROVIDER):
+                return False
+            if relation == Relation.CUSTOMER:
+                if super_forward:
+                    route.local_data_part_do += str(asn.as_id) + " "
+                    return True
             return True
         else:
             return False

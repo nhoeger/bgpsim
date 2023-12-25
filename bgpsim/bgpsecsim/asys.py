@@ -158,7 +158,7 @@ class AS(object):
             origin_invalid=route.origin_invalid,
             path_end_invalid=route.path_end_invalid,
             authenticated=route.authenticated and next_hop.bgp_sec_enabled,
-            local_data_part_do=[],
+            local_data_part_do="",
             #local_data_part_l=0,
             # Set Down Only Attribute
             #local_data_part_do=self.as_id if self.rlm_enabled else 0
@@ -172,7 +172,7 @@ class AS(object):
             origin_invalid=False,
             path_end_invalid=False,
             authenticated=True,
-            local_data_part_do=[],
+            local_data_part_do="",
         )
 
     def reset_rpki_objects(self) -> None:
@@ -232,7 +232,7 @@ class Route(object):
         origin_invalid: bool,
         path_end_invalid: bool,
         authenticated: bool,
-        local_data_part_do=None,
+        local_data_part_do="",
     ):
         self.dest = dest
         self.path = path
@@ -267,7 +267,7 @@ class Route(object):
         return ','.join((str(asys.as_id) for asys in self.path))
 
     # __repr__ returns the object representation in string format.
-    # str should return humand readable String whereas repr returns object to work in with python
+    # str should return human-readable String whereas repr returns object to work in with python
     def __repr__(self) -> str:
         s = str(self)
         flags = []

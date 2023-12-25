@@ -106,3 +106,22 @@ class TestRouteLeakGraph(unittest.TestCase):
         new_route.local_data_part_do = ""
         assert local_as.policy.accept_route(new_route)
 
+    def test_flow(self):
+        graph = ASGraph(as_graph.parse_as_rel_file(AS_REL_FILEPATH))
+        peer_one = graph.get_asys('5')
+        peer_two = graph.get_asys('6')
+        local_as = graph.get_asys('7')
+        local_as.policy = DownOnlyPolicy()
+
+        path_one = [peer_one.as_id, peer_two.as_id, local_as.as_id]
+        path_two = [peer_two.as_id, local_as.as_id]
+
+        # Testing path one
+        new_route = Route(
+            local_as.as_id,
+            [graph.get_asys(x) for x in path_one],
+            origin_invalid=False,
+            path_end_invalid=False,
+            authenticated=False,
+            local_data_part_do="",
+        )

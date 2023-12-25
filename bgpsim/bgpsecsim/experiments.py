@@ -14,7 +14,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy
 )
 
 PARALLELISM = 250
@@ -106,6 +106,15 @@ def figure2a_line_7_aspa_optimal(
 
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
+def figure2a_line8_rlp(
+        nx_graph: nx.Graph,
+        trials: List[Tuple[AS_ID, AS_ID]]
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
+    for asys in graph.asyss.values():
+        asys.rlm_enabled = True
+    return figure2a_experiment(graph, trials, n_hops=1)
 
 def figure2a_line_8_aspa_full(
         nx_graph: nx.Graph,
