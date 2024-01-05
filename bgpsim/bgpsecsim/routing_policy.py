@@ -514,8 +514,11 @@ def perform_ASCONES_algorithm(route):
 
 
 def perform_down_only(route):
+    if len(route.local_data_part_do) > 0:
+        print("Local Data Part: ", route.local_data_part_do)
     relation_to_sender = route.final.get_relation(route.first_hop)
     down_only = route.local_data_part_do != ""
+    # print(route.local_data_part_do)
     if down_only:
         print("Down Only: ", route.local_data_part_do)
     if down_only and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
@@ -536,8 +539,16 @@ def perform_down_only(route):
             # TODO: Check if this is the right procedure
             return False
     if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
-        route.local_data_part_do += str(route.final.as_id) + " "
-        #print("[Added]: ", str(route.final.as_id))
+        down_only_split = route.local_data_part_do.split()
+        last_as = down_only_split[-1] if down_only_split else None
+        if down_only:
+            print("Down Only Split: ", down_only_split, "; ", route.local_data_part_do)
+            if last_as is not None:
+                if last_as != route.final.as_id:
+                    print("Last AS: ", last_as, "; current AS: ", route.final.as_id)
+                    route.local_data_part_do += str(route.final.as_id) + " "
+        else:
+            route.local_data_part_do += str(route.final.as_id) + " "
     #print("[Relation]: ", relation_to_sender, ";[Down_Only_Old]: ", down_only, ";[Down_Only_JIT]: ", (route.local_data_part_do != ""), ";[Atr]: ", route.local_data_part_do, "; [Sender_ID]: ", route.first_hop.as_id)
     return True
 
@@ -571,27 +582,50 @@ class DownOnlyPolicy(DefaultPolicy):
         self.name = 'DownOnlyPolicy'
 
     def accept_route(self, route: Route) -> bool:
+        #print("Validating with Down Only Policy")
         super_result = super().accept_route(route)
         result = perform_down_only(route)
-        # if route.local_data_part_do != "":
-        # print("Local Data Part: ", route.local_data_part_do)
-        if not super_result and result:
-            print("Not accepting a route. DownOnlyAtr: ", route.local_data_part_do)
-            print("Reason: ", result, " [DownOnly] ; ", super_result, " [SuperResult].")
+        #if not result:
+        #    print("Down Only Validation invalid -> Not accepting the route")
+        #if len(route.local_data_part_do) > 8:
+        #    print("Local Data Part: ", route.local_data_part_do)
+        #print("Accepting Route: ", super_result, "|", result)
         return super_result and result
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
+        #print("Forwarding...")
+        previous_AS = ""
+        for i in route.local_data_part_do.split():
+            if i != previous_AS and previous_AS != "":
+                print("Not the same ASN in Down_Only Attribute")
+            i = previous_AS
+
+        #if route.local_data_part_do != "":
+        #    print("Local Data Part forwarding: ", route.local_data_part_do)
         super_forward = super().forward_to(route, relation)
         asn = route.final
         first_hop_rel = asn.get_relation(route.first_hop)
         assert first_hop_rel is not None
         if super_forward:
             if route.local_data_part_do != "" and (relation == Relation.PEER or relation == Relation.PROVIDER):
+                print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
                 return False
             if relation == Relation.CUSTOMER:
-                if super_forward:
-                    route.local_data_part_do += str(asn.as_id) + " "
-                    return True
+                down_only = route.local_data_part_do.split()
+                last_AS = down_only[-1] if down_only else None
+                if last_AS:
+                    if last_AS != asn.as_id:
+                        route.local_data_part_do += str(asn.as_id) + " "
             return True
-        else:
-            return False
+        return False
+        #else:
+            #if route.local_data_part_do != "" and (relation == Relation.PEER or relation == Relation.PROVIDER):
+                #print("Forwarding returned False, Super returned True: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
+            #return False
+            #if relation == Relation.CUSTOMER:
+            #    down_only = route.local_data_part_do.split()
+            #    last_AS = down_only[-1] if down_only else None
+            #    if last_AS:
+            #        if last_AS != asn.as_id:
+            #            route.local_data_part_do += str(asn.as_id) + " "
+            #return True

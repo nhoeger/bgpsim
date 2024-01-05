@@ -2,6 +2,7 @@ import abc
 import string
 from enum import Enum
 from typing import Dict, List, Optional
+#from bgpsecsim.routing_policy import DownOnlyPolicy
 
 AS_ID = int
 
@@ -13,16 +14,20 @@ class Relation(Enum):
     RS_CLIENT = 4
     ROUTE_SERVER = 5
 
+
 class AspaList:
     List['AS']
+
+
 class ASConesList:
     List['AS']
+
 
 class AS(object):
     # __slots__ states which instance attributes you expect your object instances to have -> results in faster access
     __slots__ = [
         'as_id', 'neighbors', 'policy', 'publishes_rpki', 'publishes_path_end', 'bgp_sec_enabled',
-        'routing_table', 'aspa', 'aspa_enabled', 'ascones', 'ascones_enabled', 'rlm_enabled', 'only_marking'
+        'routing_table', 'aspa', 'aspa_enabled', 'ascones', 'ascones_enabled', 'rlm_enabled',
     ]
 
     as_id: AS_ID
@@ -39,20 +44,18 @@ class AS(object):
     ascones: ['AS_ID', ASConesList]
     ascones_enabled: bool
     rlm_enabled: bool
-    only_marking: bool
 
     def __init__(
-        # self represents the instance of the class
-        self,
-        as_id: AS_ID,
-        policy: 'RoutingPolicy',
-        publishes_rpki: bool = False,
-        publishes_path_end: bool = False,
-        bgp_sec_enabled: bool = False,
-        aspa_enabled: bool = False,
-        ascones_enabled: bool = False,
-        rlm_enabled: bool = False,
-        only_marking: bool = False,
+            # self represents the instance of the class
+            self,
+            as_id: AS_ID,
+            policy: 'RoutingPolicy',
+            publishes_rpki: bool = False,
+            publishes_path_end: bool = False,
+            bgp_sec_enabled: bool = False,
+            aspa_enabled: bool = False,
+            ascones_enabled: bool = False,
+            rlm_enabled: bool = False,
     ):
         self.as_id = as_id
         self.policy = policy
@@ -66,7 +69,6 @@ class AS(object):
         self.ascones = []
         self.ascones_enabled = ascones_enabled
         self.rlm_enabled = rlm_enabled
-        self.only_marking = only_marking
         self.reset_routing_table()
         self.reset_rpki_objects()
 
@@ -120,6 +122,7 @@ class AS(object):
 
         Returns a list of ASs to advertise route to.
         """
+        ### Check current Policy
         if route.dest == self.as_id:
             return []
 
@@ -128,7 +131,7 @@ class AS(object):
 
         # Only update route if new route is preferred over existing route
         if (route.dest in self.routing_table and
-            not self.policy.prefer_route(self.routing_table[route.dest], route)):
+                not self.policy.prefer_route(self.routing_table[route.dest], route)):
             return []
 
         self.routing_table[route.dest] = route
@@ -159,9 +162,6 @@ class AS(object):
             path_end_invalid=route.path_end_invalid,
             authenticated=route.authenticated and next_hop.bgp_sec_enabled,
             local_data_part_do="",
-            #local_data_part_l=0,
-            # Set Down Only Attribute
-            #local_data_part_do=self.as_id if self.rlm_enabled else 0
         )
 
     def reset_routing_table(self) -> None:
@@ -181,7 +181,7 @@ class AS(object):
 
     def create_new_aspa(self, graph) -> None:
         self.aspa = self.as_id, self.get_providers()
-        if self.as_id in graph.get_tierOne(): #ASPA contains AS0 for all ASes that do not have providers
+        if self.as_id in graph.get_tierOne():  # ASPA contains AS0 for all ASes that do not have providers
             self.aspa = self.as_id, ['AS0']
 
     def create_new_ascones(self) -> None:
@@ -209,8 +209,9 @@ class AS(object):
         if hasattr(self, 'ascones'):
             return self.ascones[1]
 
+
 class Route(object):
-    __slots__ = ['dest', 'path', 'origin_invalid', 'path_end_invalid', 'authenticated', 'local_data_part_do',]
+    __slots__ = ['dest', 'path', 'origin_invalid', 'path_end_invalid', 'authenticated', 'local_data_part_do', ]
 
     # Destination is an IP block that is owned by this AS. The AS_ID is the same as the origin's ID
     # for valid routes, but may differ in a hijacking attack.
@@ -226,13 +227,13 @@ class Route(object):
     local_data_part_do: string
 
     def __init__(
-        self,
-        dest: AS_ID,
-        path: List[AS],
-        origin_invalid: bool,
-        path_end_invalid: bool,
-        authenticated: bool,
-        local_data_part_do="",
+            self,
+            dest: AS_ID,
+            path: List[AS],
+            origin_invalid: bool,
+            path_end_invalid: bool,
+            authenticated: bool,
+            local_data_part_do="",
     ):
         self.dest = dest
         self.path = path
@@ -241,8 +242,7 @@ class Route(object):
         self.authenticated = authenticated
         self.local_data_part_do = local_data_part_do if local_data_part_do is not None else ""
 
-
-# @property is python way to create getter and setter method
+    # @property is python way to create getter and setter method
     @property
     def length(self) -> int:
         return len(self.path)
@@ -280,6 +280,7 @@ class Route(object):
         if flags:
             s += " " + " ".join(flags)
         return s
+
 
 class RoutingPolicy(abc.ABC):
     @abc.abstractmethod

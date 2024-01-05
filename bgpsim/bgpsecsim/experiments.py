@@ -90,6 +90,23 @@ def figure2a_line_6_aspa_partial(
         asys.aspa_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
 
+def figure2aDownOnlyPartial(
+        nx_graph: nx.Graph,
+        deployment: int,
+        trials: List[Tuple[AS_ID, AS_ID]]
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=ASPAPolicy())
+    #i = 0
+    for asys in graph.identify_top_isps(deployment):
+        asys.rlm_enabled = True
+        # TODO: Note: Added following line
+        asys.policy = DownOnlyPolicy()
+        #i += 1
+    #print("ASes with enabled Down Only: ", i)
+    # TODO: Note: Changed number of hops from 1 to 2
+    return figure2a_experiment(graph, trials, n_hops=2)
+
+
 def figure2a_line_7_aspa_optimal(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
@@ -114,6 +131,7 @@ def figure2a_line8_rlp(
     graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
     for asys in graph.asyss.values():
         asys.rlm_enabled = True
+        # TODO: Changed hops from 2 to 1
     return figure2a_experiment(graph, trials, n_hops=1)
 
 def figure2a_line_8_aspa_full(
@@ -387,6 +405,23 @@ def figure8_line_2_bgpsec_partial(
         for asys in graph.identify_top_isps(int(deployment / p)):
             if random.random() < p:
                 asys.policy = BGPsecMedSecPolicy()
+        results.extend(figure2a_experiment(graph, trials, n_hops=1))
+    return results
+
+# Added for partial deployment evaluation
+# TODO: Compare BGPsecMid with DownOnly Policy
+def figure8_line_2_down_only(
+        nx_graph: nx.Graph,
+        deployment: int,
+        p: float,
+        trials: List[Tuple[AS_ID, AS_ID]]
+) -> List[Fraction]:
+    results = []
+    graph = ASGraph(nx_graph, policy=RPKIPolicy())
+    for _ in range(20):
+        for asys in graph.identify_top_isps(int(deployment / p)):
+            if random.random() < p:
+                asys.policy = DownOnlyPolicy()
         results.extend(figure2a_experiment(graph, trials, n_hops=1))
     return results
 
