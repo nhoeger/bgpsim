@@ -95,12 +95,13 @@ def figure2aDownOnlyPartial(
         deployment: int,
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
-    graph = ASGraph(nx_graph, policy=ASPAPolicy())
+    # TODO: Changed policies
+    graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
     #i = 0
     for asys in graph.identify_top_isps(deployment):
         asys.rlm_enabled = True
         # TODO: Note: Added following line
-        asys.policy = DownOnlyPolicy()
+        #asys.policy = DownOnlyPolicy()
         #i += 1
     #print("ASes with enabled Down Only: ", i)
     # TODO: Note: Changed number of hops from 1 to 2
@@ -129,10 +130,13 @@ def figure2a_line8_rlp(
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
+    i = 0
     for asys in graph.asyss.values():
+        i += 1
         asys.rlm_enabled = True
         # TODO: Changed hops from 2 to 1
-    return figure2a_experiment(graph, trials, n_hops=1)
+    print("Enabled ASes: ", str(i))
+    return figure2a_experiment(graph, trials, n_hops=2)
 
 def figure2a_line_8_aspa_full(
         nx_graph: nx.Graph,
