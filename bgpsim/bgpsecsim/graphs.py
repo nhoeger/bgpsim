@@ -257,11 +257,11 @@ def figure2a1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID
     aspa_enable = False
 
     down_only_results = []
-    #for deployment in deployments:
-     #  print(f"Down Only (deployment = {deployment})")
-      # tmp = fmean(experiments.figure2aDownOnlyPartial(nx_graph, deployment, trials))
-       #print("Appending: ", tmp)
-      # down_only_results.append(tmp)
+    for deployment in deployments:
+        print(f"Down Only (deployment = {deployment})")
+        tmp = fmean(experiments.figure2aDownOnlyPartial(nx_graph, deployment, trials))
+        print("Appending: ", tmp)
+        down_only_results.append(tmp)
 
     print("Down Only in partial Deployment: ", down_only_results)
 
@@ -301,7 +301,7 @@ def figure2a1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID
         print("BGPsec (full deployment, legacy allowed): ", line5_results)
 
     plt.figure(figsize=(10, 7))
-    #plt.plot(deployments, down_only_results, label= "Down Only Partial Deployment")
+    plt.plot(deployments, down_only_results, label= "Down Only Partial Deployment")
     plt.plot(deployments, np.repeat(line8_results, 11), label="DownOnly", linestyle="--")
     if full_mode:
         plt.plot(deployments, line1_results, label="Path-end-validation (partial deployment)")

@@ -96,16 +96,16 @@ def figure2aDownOnlyPartial(
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
     # TODO: Changed policies
-    graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
-    #i = 0
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    i = 0
     for asys in graph.identify_top_isps(deployment):
         asys.rlm_enabled = True
         # TODO: Note: Added following line
-        #asys.policy = DownOnlyPolicy()
-        #i += 1
-    #print("ASes with enabled Down Only: ", i)
+        asys.policy = DownOnlyPolicy()
+        i += 1
+    print("ASes with enabled Down Only: ", i)
     # TODO: Note: Changed number of hops from 1 to 2
-    return figure2a_experiment(graph, trials, n_hops=2)
+    return figure2a_experiment(graph, trials, n_hops=1)
 
 
 def figure2a_line_7_aspa_optimal(
@@ -124,19 +124,41 @@ def figure2a_line_7_aspa_optimal(
 
     return figure2a_experiment(graph, trials, n_hops=1)
 
+def figure2a_line_7_down_only_optimal(
+        nx_graph: nx.Graph,
+        trials: List[Tuple[AS_ID, AS_ID]]
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    # Values here have to be set, to use ASPA for the desired percentage by AS categorized in certain Tier
+    tierTwo = 50
+    tierThree = 50
+
+    for asys in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tierTwo)):
+        graph.get_asys(asys).rlm_enabled = True
+        graph.get_asys(asys).policy = DownOnlyPolicy
+
+    for asys in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tierThree)):
+        graph.get_asys(asys).aspa_enabled = True
+        graph.get_asys(asys).policy = DownOnlyPolicy
+
+    return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure2a_line8_rlp(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
-    graph = ASGraph(nx_graph, policy=DownOnlyPolicy())
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
     i = 0
     for asys in graph.asyss.values():
         i += 1
-        asys.rlm_enabled = True
+        asys.policy = DownOnlyPolicy()
+        #asys.rlm_enabled = True
         # TODO: Changed hops from 2 to 1
     print("Enabled ASes: ", str(i))
     return figure2a_experiment(graph, trials, n_hops=2)
+
+
 
 def figure2a_line_8_aspa_full(
         nx_graph: nx.Graph,

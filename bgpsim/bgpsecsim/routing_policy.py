@@ -570,26 +570,20 @@ def perform_down_only(route) -> bool:
     # If a route with DO Community is received from a Peer (non-transit) and
     # at least one DO value is not equal to the sending neighbor's ASN, then
     # it is a route leak and MUST be dropped. The procedure halts.
-    # TODO: Update policy 2 and 3
     if do_set and relation_to_sender == Relation.PEER:
         print("[Relation]: CUSTOMER; [Down_Only]: True ;[Atr]: ", route.local_data_part_do, "; [Length]: ",
               len(route.local_data_part_do), "; [PreviousASN]: ", route.final.as_id)
-        if route.local_data_part_do != "":
-            for i in route.local_data_part_do.split():
-                if i != route.first_hop.as_id:
-                    print("Reason 2")
-                    return False
-            print("Reason 3")
-            return True
-        else:
-            print("Reason 4")
-            # TODO: Check if this is the right procedure
-            return False
+        for i in route.local_data_part_do.split():
+            if i != route.first_hop.as_id:
+                print("Reason 2")
+                return False
+        print("Reason 3")
+        return True
 
     # Ingress policy 3:
     # If a route is received from a Provider, Peer, or RS, then a DO
     # Community MUST be added with a value equal to the sending neighbor's ASN.
-    if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER:
+    if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or relation_to_sender == Relation.RS_CLIENT:
         down_only_split = route.local_data_part_do.split()
         last_as = down_only_split[-1] if down_only_split else None
         if do_set:
@@ -609,7 +603,7 @@ class DownOnlyPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = super().accept_route(route)
         result = perform_down_only(route)
-        if not result:
+        if not result and result:
             print("Down Only Validation invalid -> Not accepting the route")
         return super_result and result
 
@@ -617,6 +611,23 @@ class DownOnlyPolicy(DefaultPolicy):
         do_set = route.local_data_part_do != ""
         super_forward = super().forward_to(route, relation)
         asn = route.final
+        down_only_forward = False
+
+        # egress policy 1
+        # A route with DO Community MUST NOT be sent to a Provider, Peer or RS.
+        if do_set and (relation == Relation.PEER or relation == Relation.PROVIDER or relation == Relation.ROUTE_SERVER):
+            print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
+            down_only_forward = False
+
+        # egress policy 2
+        # If a route is sent to a Customer or Peer, then a DO Community
+        # MUST be added with value equal to the ASN of the sender.
+        if relation == Relation.CUSTOMER or relation == Relation.PEER:
+            route.local_data_part_do += asn.as_id
+        down_only_forward = True
+
+        if super_forward and not down_only_forward:
+            print("Super true but down only false -> no forwarding ")
 
         if super_forward:
             # egress policy 1
