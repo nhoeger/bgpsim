@@ -8,6 +8,8 @@ class DefaultPolicy(RoutingPolicy):
     def __init__(self):
         self.name = 'DefaultPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
         # not in combination with return, inverts the value
         return not route.contains_cycle()
@@ -58,8 +60,9 @@ class RPKIPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'RPKIPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("RPKI policy used")
         return super().accept_route(route) and not route.origin_invalid
 
 
@@ -67,8 +70,9 @@ class PathEndValidationPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'PathEndValidationPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("Path End Validation used")
         return super().accept_route(route) and not route.path_end_invalid
 
 
@@ -76,15 +80,15 @@ class BGPsecHighSecPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'BGPsecHighSecPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("BGPsec Policy used")
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
         return super().accept_route(route) and not route.origin_invalid
 
     # Lambda takes several arguments, but only has one expression
     def preference_rules(self) -> Generator[Callable[[Route], int], None, None]:
-        print("BGPsec Policy used")
         # Prefer authenticated routes
         yield lambda route: not route.authenticated
 
@@ -104,14 +108,14 @@ class BGPsecMedSecPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'BGPsecMedSecPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("BGPsec Policy used")
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
         return super().accept_route(route) and not route.origin_invalid
 
     def preference_rules(self) -> Generator[Callable[[Route], int], None, None]:
-        print("BGPsec Policy used")
         # 1. Local preferences
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
@@ -130,14 +134,14 @@ class BGPsecLowSecPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'BGPsecLowSecPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("BGPsec Policy used")
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
         return super().accept_route(route) and not route.origin_invalid
 
     def preference_rules(self) -> Generator[Callable[[Route], int], None, None]:
-        print("BGPsec Policy used")
         # 1. Local preferences
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
@@ -157,15 +161,15 @@ class RouteLeakPolicy(RoutingPolicy):
     def __init__(self):
         self.name = 'RouteLeakPolicy'
 
+    def __str__(self):
+        return self.name
     def accept_route(self, route: Route) -> bool:
-        print("BGPsec Policy used")
         # not in combination with return, inverts the value
         return not route.contains_cycle()
         # If Route contains a cycle, then it returns true
         # -> the not inverts the bool and so the Route is declined as there is a cycle in it
 
     def prefer_route(self, current: Route, new: Route) -> bool:
-        print("BGPsec Policy used")
         # assert triggers error as soon as condition is false, in this case, if both final AS aren't the same
         assert current.final == new.final, "routes must have same final AS"
 
@@ -183,7 +187,6 @@ class RouteLeakPolicy(RoutingPolicy):
         return False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
-        print("BGPsec Policy used")
         #        asys = route.final
         #        first_hop_rel = asys.get_relation(route.first_hop)
         #        assert first_hop_rel is not None
@@ -192,7 +195,6 @@ class RouteLeakPolicy(RoutingPolicy):
     # Generators are iterators, a kind of iterable you can only iterate over once.
     # Generators do not store all the values in memory, they generate the values on the fly:
     def preference_rules(self) -> Generator[Callable[[Route], int], None, None]:
-        print("BGPsec Policy used")
         # 1. Local preferences
         def local_pref(route):
             relation = route.final.get_relation(route.first_hop)
@@ -207,8 +209,6 @@ class RouteLeakPolicy(RoutingPolicy):
 
 def perform_ASPA_algorithm(route):
     result = False
-    print("ASPA algorithm used")
-
     # We do not implement the mandatory check in Section 6 of the draft for intentionally leaked ASes that removed their ASN from the path as we do not resemble this use case here.
     # Algorithm for upstream paths (routes received by customer), Section 6.1 of draft
     # print(route)
@@ -373,8 +373,6 @@ def perform_ASPA_algorithm(route):
 
 def perform_ASCONES_algorithm(route):
     result = False
-
-    print("AS-Cones validation used")
     # https://datatracker.ietf.org/doc/html/draft-ietf-grow-rpki-as-cones-02
     # We use the ASPA algorithm for validation of ASCones paths! It is much more mature and works very well.
     # The algorithm was adjusted to look at the relationship from the other end, e.g. ASCones view not ASPA view.
@@ -532,9 +530,10 @@ class ASPAPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'ASPAPolicy'
 
+    def __str__(self):
+        return self.name
     # https://datatracker.ietf.org/doc/html/draft-ietf-sidrops-aspa-verification-16
     def accept_route(self, route: Route) -> bool:
-        print("Using ASPA policy")
         result = perform_ASPA_algorithm(route)
 
         # Accepts the route if none of the elements with ASPA activated has returned INVALID
@@ -545,9 +544,10 @@ class ASCONESPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'ASCONESPolicy'
 
+    def __str__(self):
+        return self.name
     # https://datatracker.ietf.org/doc/html/draft-ietf-sidrops-aspa-verification-16
     def accept_route(self, route: Route) -> bool:
-        print("Using AS-Cones policy")
         result = perform_ASCONES_algorithm(route)
 
         # Accepts the route if none of the elements with ASPA activated has returned INVALID
@@ -556,9 +556,10 @@ class ASCONESPolicy(DefaultPolicy):
 
 def perform_down_only(route) -> bool:
     do_set = route.local_data_part_do != ""
-    asn = route.final
     relation_to_sender = route.final.get_relation(route.first_hop)
 
+    if do_set:
+        print("Do Set!")
     # Ingress policy 1:
     # If a route with DO Community is received from a Customer or RS-client,
     # then it is a route leak and MUST be dropped. The procedure halts.
@@ -577,8 +578,6 @@ def perform_down_only(route) -> bool:
             if i != route.first_hop.as_id:
                 print("Reason 2")
                 return False
-        print("Reason 3")
-        return True
 
     # Ingress policy 3:
     # If a route is received from a Provider, Peer, or RS, then a DO
@@ -594,14 +593,18 @@ def perform_down_only(route) -> bool:
                     route.local_data_part_do += str(route.final.as_id) + " "
         else:
             route.local_data_part_do += str(route.final.as_id) + " "
+    return True
 
 
 class DownOnlyPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'DownOnlyPolicy'
 
+    def __str__(self):
+        return self.name
+
     def accept_route(self, route: Route) -> bool:
-        super_result = super().accept_route(route)
+        super_result = DefaultPolicy().accept_route(route)
         result = perform_down_only(route)
         if not result and result:
             print("Down Only Validation invalid -> Not accepting the route")
@@ -609,31 +612,14 @@ class DownOnlyPolicy(DefaultPolicy):
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
         do_set = route.local_data_part_do != ""
-        super_forward = super().forward_to(route, relation)
+        super_forward = DefaultPolicy().forward_to(route, relation)
         asn = route.final
-        down_only_forward = False
-
-        # egress policy 1
-        # A route with DO Community MUST NOT be sent to a Provider, Peer or RS.
-        if do_set and (relation == Relation.PEER or relation == Relation.PROVIDER or relation == Relation.ROUTE_SERVER):
-            print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
-            down_only_forward = False
-
-        # egress policy 2
-        # If a route is sent to a Customer or Peer, then a DO Community
-        # MUST be added with value equal to the ASN of the sender.
-        if relation == Relation.CUSTOMER or relation == Relation.PEER:
-            route.local_data_part_do += asn.as_id
-        down_only_forward = True
-
-        if super_forward and not down_only_forward:
-            print("Super true but down only false -> no forwarding ")
 
         if super_forward:
             # egress policy 1
             # A route with DO Community MUST NOT be sent to a Provider, Peer or RS.
             if do_set and (relation == Relation.PEER or relation == Relation.PROVIDER or relation == Relation.ROUTE_SERVER):
-                print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
+                # print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
                 return False
 
             # egress policy 2
@@ -642,3 +628,5 @@ class DownOnlyPolicy(DefaultPolicy):
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
                 route.local_data_part_do += asn.as_id
             return True
+        else:
+            return False

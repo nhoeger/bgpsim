@@ -19,6 +19,7 @@ from bgpsecsim.routing_policy import (
 
 PARALLELISM = 250
 
+
 def figure2a_line_1_next_as(
         nx_graph: nx.Graph,
         deployment: int,
@@ -28,6 +29,7 @@ def figure2a_line_1_next_as(
     for asys in graph.identify_top_isps(deployment):
         asys.policy = PathEndValidationPolicy()
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure2a_line_2_bgpsec_partial(
         nx_graph: nx.Graph,
@@ -39,6 +41,7 @@ def figure2a_line_2_bgpsec_partial(
         asys.policy = BGPsecMedSecPolicy()
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 def figure2a_line_3_two_hop(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
@@ -46,12 +49,14 @@ def figure2a_line_3_two_hop(
     graph = ASGraph(nx_graph, policy=PathEndValidationPolicy())
     return figure2a_experiment(graph, trials, n_hops=2)
 
+
 def figure2a_line_4_rpki(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=RPKIPolicy())
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure2a_line_5_bgpsec_low_full(
         nx_graph: nx.Graph,
@@ -62,6 +67,7 @@ def figure2a_line_5_bgpsec_low_full(
         asys.bgp_sec_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 def figure2a_line_5_bgpsec_med_full(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
@@ -70,6 +76,7 @@ def figure2a_line_5_bgpsec_med_full(
     for asys in graph.asyss.values():
         asys.bgp_sec_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure2a_line_5_bgpsec_high_full(
         nx_graph: nx.Graph,
@@ -80,6 +87,7 @@ def figure2a_line_5_bgpsec_high_full(
         asys.bgp_sec_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 def figure2a_line_6_aspa_partial(
         nx_graph: nx.Graph,
         deployment: int,
@@ -89,6 +97,7 @@ def figure2a_line_6_aspa_partial(
     for asys in graph.identify_top_isps(deployment):
         asys.aspa_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure2aDownOnlyPartial(
         nx_graph: nx.Graph,
@@ -124,6 +133,7 @@ def figure2a_line_7_aspa_optimal(
 
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 def figure2a_line_7_down_only_optimal(
         nx_graph: nx.Graph,
         trials: List[Tuple[AS_ID, AS_ID]]
@@ -153,11 +163,10 @@ def figure2a_line8_rlp(
     for asys in graph.asyss.values():
         i += 1
         asys.policy = DownOnlyPolicy()
-        #asys.rlm_enabled = True
+        # asys.rlm_enabled = True
         # TODO: Changed hops from 2 to 1
     print("Enabled ASes: ", str(i))
     return figure2a_experiment(graph, trials, n_hops=2)
-
 
 
 def figure2a_line_8_aspa_full(
@@ -168,6 +177,7 @@ def figure2a_line_8_aspa_full(
     for asys in graph.asyss.values():
         asys.aspa_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def run_trial(graph, victim_id, attacker_id, n_hops):
     victim = graph.get_asys(victim_id)
@@ -186,6 +196,7 @@ def run_trial(graph, victim_id, attacker_id, n_hops):
     graph.clear_routing_tables()
 
     return result
+
 
 def figure2a_experiment(
         graph: ASGraph,
@@ -213,8 +224,10 @@ def figure2a_experiment(
         trial_queue.put(None)
     for worker in workers:
         worker.join()
+    print("Results: ", result)
 
     return results
+
 
 def figureRouteLeak_experiment_selective(
         graph: ASGraph,
@@ -225,9 +238,10 @@ def figureRouteLeak_experiment_selective(
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
     result_queue: mp.Queue = mp.Queue()
-    #Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
-    #Make sure to reset policies and routing tables when reusing a worker!
-    workers = [FigureRouteLeakExperiment(trial_queue, result_queue, graph, deployment_ASPA_objects_list, deployment_ASPA_policy_list, algorithm)
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureRouteLeakExperiment(trial_queue, result_queue, graph, deployment_ASPA_objects_list,
+                                         deployment_ASPA_policy_list, algorithm)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
@@ -248,19 +262,19 @@ def figureRouteLeak_experiment_selective(
         worker.join()
 
     return results
+
 
 def figureRouteLeak_experiment_random(
         graph: ASGraph,
         trials: List[Tuple[AS_ID, AS_ID]],
-        deployment_objects: int,
-        deployment_policy: int,
+        deployment: [int, int, int],
         algorithm: str
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
     result_queue: mp.Queue = mp.Queue()
-    #Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
-    #Make sure to reset policies and routing tables when reusing a worker!
-    workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, deployment_objects, deployment_policy, algorithm)
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, deployment, algorithm)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
@@ -281,6 +295,7 @@ def figureRouteLeak_experiment_random(
         worker.join()
 
     return results
+
 
 def figureForgedOrigin_experiment_random(
         graph: ASGraph,
@@ -291,9 +306,10 @@ def figureForgedOrigin_experiment_random(
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
     result_queue: mp.Queue = mp.Queue()
-    #Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
-    #Make sure to reset policies and routing tables when reusing a worker!
-    workers = [FigureForgedOriginPrefixHijackExperimentRandom(trial_queue, result_queue, graph, deployment_objects, deployment_policy, algorithm)
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureForgedOriginPrefixHijackExperimentRandom(trial_queue, result_queue, graph, deployment_objects,
+                                                              deployment_policy, algorithm)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
@@ -315,6 +331,7 @@ def figureForgedOrigin_experiment_random(
 
     return results
 
+
 def figureForgedOrigin_experiment_selective(
         graph: ASGraph,
         trials: List[Tuple[AS_ID, AS_ID]],
@@ -324,9 +341,10 @@ def figureForgedOrigin_experiment_selective(
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
     result_queue: mp.Queue = mp.Queue()
-    #Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
-    #Make sure to reset policies and routing tables when reusing a worker!
-    workers = [FigureForgedOriginPrefixHijackExperiment(trial_queue, result_queue, graph, deployment_objects_list, deployment_policy_list, algorithm)
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureForgedOriginPrefixHijackExperiment(trial_queue, result_queue, graph, deployment_objects_list,
+                                                        deployment_policy_list, algorithm)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
@@ -353,6 +371,7 @@ def figure4_k_hop(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]], n_hops:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figure2a_experiment(graph, trials, n_hops)
 
+
 def figure7a(
         nx_graph: nx.Graph,
         deployment: int,
@@ -362,6 +381,7 @@ def figure7a(
     for asys in graph.identify_top_isps(deployment):
         asys.policy = PathEndValidationPolicy()
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 def figure7b(
         nx_graph: nx.Graph,
@@ -373,6 +393,7 @@ def figure7b(
         asys.policy = BGPsecMedSecPolicy()
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 # ASPA deployed by Top 100 providers
 def figure7c(
         nx_graph: nx.Graph,
@@ -383,6 +404,7 @@ def figure7c(
     for asys in graph.identify_top_isps(deployment):
         asys.aspa_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
+
 
 # ASPA deployed by 50% of all AS
 def figure7d(
@@ -404,6 +426,7 @@ def figure7d(
         graph.get_asys(asys).aspa_enabled = True
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
 def figure8_line_1_next_as(
         nx_graph: nx.Graph,
         deployment: int,
@@ -418,6 +441,7 @@ def figure8_line_1_next_as(
                 asys.policy = PathEndValidationPolicy()
         results.extend(figure2a_experiment(graph, trials, n_hops=1))
     return results
+
 
 def figure8_line_2_bgpsec_partial(
         nx_graph: nx.Graph,
@@ -434,6 +458,7 @@ def figure8_line_2_bgpsec_partial(
         results.extend(figure2a_experiment(graph, trials, n_hops=1))
     return results
 
+
 # Added for partial deployment evaluation
 # TODO: Compare BGPsecMid with DownOnly Policy
 def figure8_line_2_down_only(
@@ -443,13 +468,14 @@ def figure8_line_2_down_only(
         trials: List[Tuple[AS_ID, AS_ID]]
 ) -> List[Fraction]:
     results = []
-    graph = ASGraph(nx_graph, policy=RPKIPolicy())
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
     for _ in range(20):
         for asys in graph.identify_top_isps(int(deployment / p)):
             if random.random() < p:
                 asys.policy = DownOnlyPolicy()
         results.extend(figure2a_experiment(graph, trials, n_hops=1))
     return results
+
 
 def figure8_line_3_aspa_partial(
         nx_graph: nx.Graph,
@@ -466,6 +492,7 @@ def figure8_line_3_aspa_partial(
         results.extend(figure2a_experiment(graph, trials, n_hops=1))
     return results
 
+
 def figure9_line_1_rpki_partial(
         nx_graph: nx.Graph,
         deployment: int,
@@ -479,32 +506,103 @@ def figure9_line_1_rpki_partial(
 
 def figure10_aspa(
         nx_graph: nx.Graph,
-        #deployment over AS per percentage in [tier2, tier3]
+        # deployment over AS per percentage in [tier2, tier3]
         deployment: [int, int],
         trials: List[Tuple[AS_ID, AS_ID]],
         tierOne: int
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=ASPAPolicy())
 
-    for asys in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne())/100*tierOne)):
-        graph.get_asys(asys).aspa_enabled=True
+    for asys in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tierOne)):
+        graph.get_asys(asys).aspa_enabled = True
     if deployment[0] != 0:
-        for asys in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo())/100*deployment[0])):
-            graph.get_asys(asys).aspa_enabled=True
+        for asys in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * deployment[0])):
+            graph.get_asys(asys).aspa_enabled = True
     if deployment[1] != 0:
-        for asys in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree())/100*deployment[1])):
-            graph.get_asys(asys).aspa_enabled=True
+        for asys in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * deployment[1])):
+            graph.get_asys(asys).aspa_enabled = True
 
     return figure2a_experiment(graph, trials, n_hops=1)
 
+
+def figure10_down_only(
+        nx_graph: nx.Graph,
+        # deployment over AS per percentage in [tier2, tier3]
+        deployment: [int, int],
+        trials: List[Tuple[AS_ID, AS_ID]],
+        tierOne: int
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=RouteLeakPolicy())
+    counter_one = 0
+    counter_two = 0
+    counter_three = 0
+    counter_four = 0
+    tmp = [0, 0, 0]
+    tmp[0] = tierOne
+    tmp[1] = deployment[1]
+    tmp[2] = deployment[0]
+
+    for asys in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tierOne)):
+        graph.get_asys(asys).rlm_enabled = True
+        graph.get_asys(asys).policy = DownOnlyPolicy()
+    if deployment[1] != 0:
+        for asys in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * deployment[1])):
+            graph.get_asys(asys).rlm_enabled = True
+            graph.get_asys(asys).policy = DownOnlyPolicy()
+    if deployment[0] != 0:
+        for asys in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * deployment[0])):
+            graph.get_asys(asys).rlm_enabled = True
+            graph.get_asys(asys).policy = DownOnlyPolicy()
+
+    #for asys in graph.get_tierOne():
+    #    if graph.get_asys(asys).policy.__str__() == 'DownOnlyPolicy':
+    #       counter_one += 1
+    #    elif graph.get_asys(asys).policy.__str__() == 'RouteLeakPolicy':
+    #        counter_two += 1
+    #    elif graph.get_asys(asys).policy.__str__() == 'DefaultPolicy':
+    #        counter_three += 1
+    #    else:
+    #        counter_four += 1
+    #print("Tier One:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    #      , "/ Other: ", counter_four)
+    #counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
+    #for asys_two in graph.get_tierTwo():
+    #    if graph.get_asys(asys_two).policy.__str__() == 'DownOnlyPolicy':
+    #        counter_one += 1
+    #    elif graph.get_asys(asys_two).policy.__str__() == 'RouteLeakPolicy':
+    #        counter_two += 1
+    #    elif graph.get_asys(asys_two).policy.__str__() == 'DefaultPolicy':
+    #        counter_three += 1
+    #    else:
+    #        counter_four += 1
+    #print("Tier Two:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    #      , "/ Other: ", counter_four)
+    #counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
+    #for asys in graph.get_tierThree():
+    #    if graph.get_asys(asys).policy.__str__() == 'DownOnlyPolicy':
+    #        counter_one += 1
+    #    elif graph.get_asys(asys).policy.__str__() == 'RouteLeakPolicy':
+    #        counter_two += 1
+    #    elif graph.get_asys(asys).policy.__str__() == 'DefaultPolicy':
+    #        counter_three += 1
+    #    else:
+    #        counter_four += 1
+    #print("Tier Three: Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    #      , "/ Other: ", counter_four)
+    return figureRouteLeak_experiment_random(graph, trials, tmp, "DownOnly")
+
+
 # In this method, each and every trial run chooses his ASPA ASes randomly for object creation and policy deployment (compared to choosing it once randomly for all trial runs)
-def figure11_random_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure11_random_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                    trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_random(graph, trials, deployment_objects, deployment_policy, 'ASPA')
 
+
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Objects and Policy are deployed by out-degree from top-to-bottom
-def figure12_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure12_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
 
@@ -514,91 +612,105 @@ def figure12_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: i
     # Select ASes for ASPA policy deployment top-to-bottom by cust degree
     deployment_policy_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_policy))]
 
-    #print("ASes in total sorted: ", len(descending_by_cust_degree))
-    #print("ASPA policy share: ", deployment_ASPA_policy)
-    #print("ASPA object share: ", deployment_ASPA_objects)
-    #print("ASes ASPA Objects selected: ", len(deployment_ASPA_objects_list))
-    #print("ASes ASPA Policy selected: ", len(deployment_ASPA_policy_list))
+    # print("ASes in total sorted: ", len(descending_by_cust_degree))
+    # print("ASPA policy share: ", deployment_ASPA_policy)
+    # print("ASPA object share: ", deployment_ASPA_objects)
+    # print("ASes ASPA Objects selected: ", len(deployment_ASPA_objects_list))
+    # print("ASes ASPA Policy selected: ", len(deployment_ASPA_policy_list))
 
     return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
 
 
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Policies are deployed by out-degree from top-to-bottom, object creation from bottom-to-top
-def figure14_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure14_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
 
     # Select ASes for ASPA object deployment bottom-to-top by cust degree
-    if deployment_objects == 0: #to avoid selection of whole array with [-0:]
+    if deployment_objects == 0:  # to avoid selection of whole array with [-0:]
         deployment_objects_list = []
     else:
-        deployment_objects_list = descending_by_cust_degree[-(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
+        deployment_objects_list = descending_by_cust_degree[
+                                  -(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
 
     # Select ASes for ASPA policy deployment top-to-bottom by cust degree
     deployment_policy_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_policy))]
 
-    #print("ASes in total sorted: ", len(descending_by_cust_degree))
-    #print("ASPA policy share: ", deployment_policy)
-    #print("ASPA object share: ", deployment_objects)
-    #print("ASes ASPA Objects selected: ", len(deployment_objects_list))
-    #print("ASes ASPA Policy selected: ", len(deployment_policy_list))
+    # print("ASes in total sorted: ", len(descending_by_cust_degree))
+    # print("ASPA policy share: ", deployment_policy)
+    # print("ASPA object share: ", deployment_objects)
+    # print("ASes ASPA Objects selected: ", len(deployment_objects_list))
+    # print("ASes ASPA Policy selected: ", len(deployment_policy_list))
 
     return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
 
 
 # In this method, each and every trial run chooses his ASCONES ASes randomly for object creation and policy deployment (compared to choosing it once randomly for all trial runs)
-def figure30_random_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure30_random_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_random(graph, trials, deployment_objects, deployment_policy, 'ASCONES')
 
 
 # In this method, ASCONES ASes are selected by strategy and all trial runs deploy the same ASCONES objects and ASes.
 # Strategy: Objects and Policy are deployed by out-degree from top-to-bottom
-def figure31_selective_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure31_selective_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                          trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
     tierone_and_tiertwo_descending_by_cust_degree = graph.identify_top_isps_from_tierone_and_tiertwo(len(graph.asyss))
 
     # Select ASes for object deployment top-to-bottom by cust degree
-    deployment_objects_list = tierone_and_tiertwo_descending_by_cust_degree[:(round(len(tierone_and_tiertwo_descending_by_cust_degree) / 100 * deployment_objects))]
+    deployment_objects_list = tierone_and_tiertwo_descending_by_cust_degree[
+                              :(round(len(tierone_and_tiertwo_descending_by_cust_degree) / 100 * deployment_objects))]
 
     # Select ASes for policy deployment top-to-bottom by cust degree
     deployment_policy_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_policy))]
 
-    return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASCONES')
+    return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                'ASCONES')
+
 
 # In this method, ASCONES ASes are selected by strategy and all trial runs deploy the same ASCONES objects and ASes.
 # Strategy: Objects and Policy are deployed by out-degree. Objects from BottomToTop, Policy from TopToBottom
-def figure32_selective_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure32_selective_ascones_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                          trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
     tierone_and_tiertwo_descending_by_cust_degree = graph.identify_top_isps_from_tierone_and_tiertwo(len(graph.asyss))
 
     # Select ASes for ASCONES object deployment bottom-to-top by cust degree from tier one and tier two ASes
-    if deployment_objects == 0: #to avoid selection of whole array with [-0:]
+    if deployment_objects == 0:  # to avoid selection of whole array with [-0:]
         deployment_objects_list = []
     else:
-        deployment_objects_list = tierone_and_tiertwo_descending_by_cust_degree[-(round(len(tierone_and_tiertwo_descending_by_cust_degree) / 100 * deployment_objects)):]
+        deployment_objects_list = tierone_and_tiertwo_descending_by_cust_degree[-(
+            round(len(tierone_and_tiertwo_descending_by_cust_degree) / 100 * deployment_objects)):]
 
     # Select ASes for ASCONES policy deployment top-to-bottom by cust degree from all ASes
     deployment_policy_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_policy))]
 
-    return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASCONES')
+    return figureRouteLeak_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                'ASCONES')
+
 
 # In this method, each and every trial run chooses his ASPA ASes randomly for object creation and policy deployment (compared to choosing it once randomly for all trial runs)
 # This method is for the forget-origin prefix hijack.
-def figure40_random_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure40_random_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                    trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureForgedOrigin_experiment_random(graph, trials, deployment_objects, deployment_policy, 'ASPA')
+
 
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Objects and Policy are deployed by out-degree from top-to-bottom
 # This method is for the forget-origin prefix hijack.
-def figure42_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure42_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
-    #print([asys.as_id for asys in descending_by_cust_degree])
+    # print([asys.as_id for asys in descending_by_cust_degree])
 
     # Select ASes for ASPA object deployment top-to-bottom by cust degree
     deployment_objects_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_objects))]
@@ -612,74 +724,87 @@ def figure42_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: i
     # print("ASes ASPA Objects selected: ", len(deployment_objects_list))
     # print("ASes ASPA Policy selected: ", len(deployment_policy_list))
 
-    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
+    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                   'ASPA')
+
 
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Objects and Policy are deployed by out-degree. Objects from bottom-to-top and policy from top-to-bottom
 # This method is for the forget-origin prefix hijack.
-def figure43_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure43_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
 
     # Select ASes for ASPA object deployment bottom-to-top by cust degree
-    if deployment_objects == 0: #to avoid selection of whole array with [-0:]
+    if deployment_objects == 0:  # to avoid selection of whole array with [-0:]
         deployment_objects_list = []
     else:
-        deployment_objects_list = descending_by_cust_degree[-(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
+        deployment_objects_list = descending_by_cust_degree[
+                                  -(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
 
     # Select ASes for ASPA policy deployment top-to-bottom by cust degree
     deployment_policy_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_policy))]
 
-    #print("ASes in total sorted: ", len(descending_by_cust_degree))
-    #print("ASPA policy share: ", deployment_ASPA_policy)
-    #print("ASPA object share: ", deployment_ASPA_objects)
-    #print("ASes ASPA Objects selected: ", len(deployment_ASPA_objects_list))
-    #print("ASes ASPA Policy selected: ", len(deployment_ASPA_policy_list))
+    # print("ASes in total sorted: ", len(descending_by_cust_degree))
+    # print("ASPA policy share: ", deployment_ASPA_policy)
+    # print("ASPA object share: ", deployment_ASPA_objects)
+    # print("ASes ASPA Objects selected: ", len(deployment_ASPA_objects_list))
+    # print("ASes ASPA Policy selected: ", len(deployment_ASPA_policy_list))
 
-    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
+    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                   'ASPA')
+
 
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Objects are deployed by out-degree from top-to-bottom, Policies are deployed by out-degree from bottom-to-top
 # This method is for the forget-origin prefix hijack.
-def figure44_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure44_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
-    #print([asys.as_id for asys in descending_by_cust_degree])
+    # print([asys.as_id for asys in descending_by_cust_degree])
 
     # Select ASes for ASPA object deployment top-to-bottom by cust degree
     deployment_objects_list = descending_by_cust_degree[:(round(len(graph.asyss.keys()) / 100 * deployment_objects))]
 
     # Select ASes for ASPA object deployment bottom-to-top by cust degree
-    if deployment_policy == 0: #to avoid selection of whole array with [-0:]
+    if deployment_policy == 0:  # to avoid selection of whole array with [-0:]
         deployment_policy_list = []
     else:
         deployment_policy_list = descending_by_cust_degree[-(round(len(graph.asyss.keys()) / 100 * deployment_policy)):]
 
-    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
+    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                   'ASPA')
+
 
 # In this method, ASPA ASes are selected by strategy and all trial runs deploy the same ASPA objects and ASes.
 # Strategy: Objects and Policies are deployed by out-degree from bottom-to-top
 # This method is for the forget-origin prefix hijack.
-def figure45_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int, trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
+def figure45_selective_aspa_deployment(nx_graph: nx.Graph, deployment_objects: int, deployment_policy: int,
+                                       trials: List[Tuple[AS_ID, AS_ID]]) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     descending_by_cust_degree = graph.identify_top_isps(len(graph.asyss))
-    #print([asys.as_id for asys in descending_by_cust_degree])
+    # print([asys.as_id for asys in descending_by_cust_degree])
 
     # Select ASes for ASPA object deployment bottom-to-top by cust degree
-    if deployment_objects == 0: #to avoid selection of whole array with [-0:]
+    if deployment_objects == 0:  # to avoid selection of whole array with [-0:]
         deployment_objects_list = []
     else:
-        deployment_objects_list = descending_by_cust_degree[-(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
+        deployment_objects_list = descending_by_cust_degree[
+                                  -(round(len(graph.asyss.keys()) / 100 * deployment_objects)):]
 
     # Select ASes for ASPA object deployment bottom-to-top by cust degree
-    if deployment_policy == 0: #to avoid selection of whole array with [-0:]
+    if deployment_policy == 0:  # to avoid selection of whole array with [-0:]
         deployment_policy_list = []
     else:
         deployment_policy_list = descending_by_cust_degree[-(round(len(graph.asyss.keys()) / 100 * deployment_policy)):]
 
-    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list, 'ASPA')
+    return figureForgedOrigin_experiment_selective(graph, trials, deployment_objects_list, deployment_policy_list,
+                                                   'ASPA')
 
-#Result is a fraction, shows the ratio of successful attacks to not attacked routes
+
+# Result is a fraction, shows the ratio of successful attacks to not attacked routes
 def attacker_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fraction:
     n_bad_routes = 0
     n_total_routes = 0
@@ -687,32 +812,38 @@ def attacker_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fraction:
         route = asys.get_route(victim.as_id)
         if route:
             n_total_routes += 1
-            if attacker in route.path and route.path[route.path.index(attacker) - 1] == victim: #check that victim is one before avoid counting regular routes received by attacker
+            if attacker in route.path and route.path[route.path.index(
+                    attacker) - 1] == victim:  # check that victim is one before avoid counting regular routes received by attacker
                 n_bad_routes += 1
-                #print('Attacker: ', str(attacker.as_id) + ' Victim: ' + str(victim.as_id) + ' Bad route: ', [asys.as_id for asys in route.path])
-            #else:
-                #print('Attacker: ', str(attacker.as_id) + ' Victim: ' + str(victim.as_id) + ' Regular route: ', [asys.as_id for asys in route.path])
-    #Fraction gives the first value as numerator and the second as denominator
-    #print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
-    return Fraction(n_bad_routes, n_total_routes)*100
+                # print('Attacker: ', str(attacker.as_id) + ' Victim: ' + str(victim.as_id) + ' Bad route: ', [asys.as_id for asys in route.path])
+            # else:
+            # print('Attacker: ', str(attacker.as_id) + ' Victim: ' + str(victim.as_id) + ' Regular route: ', [asys.as_id for asys in route.path])
+    # Fraction gives the first value as numerator and the second as denominator
+    # print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
+    return Fraction(n_bad_routes, n_total_routes) * 100
 
-#Check if route contains a relationship that goes against the Gao-Rexford model
+
+# Check if route contains a relationship that goes against the Gao-Rexford model
 def leaked_route(route: ['Route']) -> AS:
-    #Check for each AS except origin and destination in the path if Gao-Rexford was respected
+    # Check for each AS except origin and destination in the path if Gao-Rexford was respected
     for idasys, asys in enumerate(route.path):
         if asys is not route.final and asys is not route.origin:
-            previous_asys = route.path[idasys-1]
-            next_asys = route.path[idasys+1]
-            #Peer sends route to other peer or upstream
-            if asys.get_relation(previous_asys) == Relation.PEER and (asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
-                return asys #return offending AS
+            previous_asys = route.path[idasys - 1]
+            next_asys = route.path[idasys + 1]
+            # Peer sends route to other peer or upstream
+            if asys.get_relation(previous_asys) == Relation.PEER and (
+                    asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
+                return asys  # return offending AS
             # Downstream sends route to other peer or upstream
-            elif asys.get_relation(previous_asys) == Relation.PROVIDER and (asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
-                return asys #return offending AS
+            elif asys.get_relation(previous_asys) == Relation.PROVIDER and (
+                    asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
+                return asys  # return offending AS
     return False
+
 
 # This function returns a fraction of total vs. bad routes.
 def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fraction:
+    print("Second attacker enum: ", attacker.as_id)
     n_bad_routes = 0
     n_total_routes = 0
     for asys in graph.asyss.values():
@@ -722,14 +853,15 @@ def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fractio
             offending_asys = leaked_route(route)
             if offending_asys:
                 n_bad_routes += 1
-                if offending_asys != attacker:
+                if offending_asys.as_id != attacker.as_id:
                     raise Exception("Attacker mismatches offending AS")
-    #print('Bad routes: ', n_bad_routes)
-    #print('Total routes: ', n_total_routes)
-    #print('----')
-    #Fraction gives the first value as numerator and the second as denominator
-    #print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
-    return Fraction(n_bad_routes, n_total_routes)*100
+    # print('Bad routes: ', n_bad_routes)
+    # print('Total routes: ', n_total_routes)
+    # print('----')
+    # Fraction gives the first value as numerator and the second as denominator
+    # print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
+    return Fraction(n_bad_routes, n_total_routes) * 100
+
 
 class Experiment(mp.Process, abc.ABC):
     input_queue: mp.Queue
@@ -757,11 +889,12 @@ class Experiment(mp.Process, abc.ABC):
 
             self.output_queue.put(self.run_trial(trial))
 
-    #Creates an abstract class which has to be definded later on
+    # Creates an abstract class which has to be definded later on
     @abc.abstractmethod
-    #raise is used to give own errors, in this case if anythin happens where now error was created for
+    # raise is used to give own errors, in this case if anythin happens where now error was created for
     def run_trial(self, trial):
         raise NotImplementedError()
+
 
 class Figure2aExperiment(Experiment):
     graph: ASGraph
@@ -775,26 +908,29 @@ class Figure2aExperiment(Experiment):
     def run_trial(self, trial: Tuple[(AS_ID, AS_ID)]):
         graph = self.graph
         n_hops = self.n_hops
-        #Takes the value passed by the function call by "trial" and assigns them to victim and attacker
+        # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
+        tmp = graph.get_asys(victim_id).get_customers()
+        tmp = graph.get_asys(victim_id).policy
 
-        #Takes the desired AS as victim out of the full graph by its ID
+        # Takes the desired AS as victim out of the full graph by its ID
         victim = graph.get_asys(victim_id)
         if victim is None:
             warnings.warn(f"No AS with ID {victim_id}")
             return Fraction(0, 1)
 
-        #Takes AS of attacker out of graph, like did for the victim
+        # Takes AS of attacker out of graph, like did for the victim
         attacker = graph.get_asys(attacker_id)
         if attacker is None:
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
-        
-        #starts to find a new routing table and executes the attack onto it by n hops
+
+        # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()
         graph.find_routes_to(victim)
         graph.hijack_n_hops(victim, attacker, n_hops)
-        
+        # graph.ro
+
         result = attacker_success_rate(graph, attacker, victim)
 
         return result
@@ -804,17 +940,20 @@ def show_policies(graph):
     default_policy = 0
     route_leak_policy = 0
     aspa_policy = 0
+    down_only_policy = 0
     for asys in graph.asyss:
-        # print(graph.get_asys(asys).policy.name)
         if graph.get_asys(asys).policy.name == 'DefaultPolicy':
             default_policy += 1
         elif graph.get_asys(asys).policy.name == 'RouteLeakPolicy':
             route_leak_policy += 1
         elif graph.get_asys(asys).policy.name == 'ASPAPolicy':
             aspa_policy += 1
+        elif graph.get_asys(asys).policy.name == 'DownOnlyPolicy':
+            down_only_policy += 1
         else:
             raise Exception('ERROR: Unknown policy in play!')
-    print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) + '\n ASPA: ' + str(aspa_policy))
+    print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) +
+          '\n ASPA: ' + str(aspa_policy) + '\n DO: ' + str(down_only_policy))
 
 
 def show_aspa_objects(graph):
@@ -831,77 +970,99 @@ def show_aspa_objects_count(graph):
             n += 1
     print('Total of ASPA objects', n)
 
-#create ASCONES objects for only tier one and two ASes according to deployment fraction
+
+# create ASCONES objects for only tier one and two ASes according to deployment fraction
 def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
     random.seed(None)
     sample = graph.get_tierOne() + graph.get_tierTwo()
     for as_id in random.sample(sample, round(len(sample) / 100 * deployment_ASCONES_objects)):
         graph.get_asys(as_id).create_new_ascones()
-        #graph.get_asys(as_id).create_dummy_aspa()
+        # graph.get_asys(as_id).create_dummy_aspa()
 
-#create ASPA objects for all ASes according to deployment fraction
+
+def down_only_randomly(graph, deployment: [int, int, int]):
+    tier_one = deployment[0]
+    tier_two = deployment[1]
+    tier_three = deployment[2]
+    for asys in graph.asyss.values():
+        asys.policy = RouteLeakPolicy()
+    for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
+        graph.get_asys(as_id).policy = DownOnlyPolicy()
+    if tier_two != 0:
+        for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two)):
+            graph.get_asys(as_id).policy = DownOnlyPolicy()
+    if tier_three != 0:
+        for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
+            graph.get_asys(as_id).policy = DownOnlyPolicy()
+
+# create ASPA objects for all ASes according to deployment fraction
 def create_ASPA_objects_randomly(graph, deployment_ASPA_objects):
     random.seed(None)
     for as_id in random.sample(graph.asyss.keys(), round(len(graph.asyss.keys()) / 100 * deployment_ASPA_objects)):
         graph.get_asys(as_id).create_new_aspa(graph)
-        #graph.get_asys(as_id).create_dummy_aspa()
+        # graph.get_asys(as_id).create_dummy_aspa()
 
-#create ASCONES objects for all ASes according to list parameter
+
+# create ASCONES objects for all ASes according to list parameter
 def create_ASCONES_objects(graph, deployment_ASCONES_objects):
     for asys in deployment_ASCONES_objects:
         asys.create_new_ascones()
-        #graph.get_asys(as_id).create_dummy_aspa()
+        # graph.get_asys(as_id).create_dummy_aspa()
 
-#create ASPA objects for all ASes according to list parameter
+
+# create ASPA objects for all ASes according to list parameter
 def create_ASPA_objects(graph, deployment_ASPA_objects):
     for asys in deployment_ASPA_objects:
         asys.create_new_aspa(graph)
-        #graph.get_asys(as_id).create_dummy_aspa()
+        # graph.get_asys(as_id).create_dummy_aspa()
 
-#create ASCONES policies for all ASes according to deployment fraction
+
+# create ASCONES policies for all ASes according to deployment fraction
 def create_ASCONES_policies_randomly(graph, deployment_ASCONES_policy):
     random.seed(None)
     for as_id in random.sample(graph.asyss.keys(), round(len(graph.asyss.keys()) / 100 * deployment_ASCONES_policy)):
         graph.get_asys(as_id).policy = ASCONESPolicy()
 
-#create ASPA policies for all ASes according to deployment fraction
+
+# create ASPA policies for all ASes according to deployment fraction
 def create_ASPA_policies_randomly(graph, deployment_ASPA_policy):
     random.seed(None)
     for as_id in random.sample(graph.asyss.keys(), round(len(graph.asyss.keys()) / 100 * deployment_ASPA_policy)):
         graph.get_asys(as_id).policy = ASPAPolicy()
 
-#create ASCONES policies for all ASes according to list parameter
+
+# create ASCONES policies for all ASes according to list parameter
 def create_ASCONES_policies(graph, deployment_ASCONES_policy):
     for asys in deployment_ASCONES_policy:
         asys.policy = ASCONESPolicy()
 
-#create ASPA policies for all ASes according to list parameter
+
+# create ASPA policies for all ASes according to list parameter
 def create_ASPA_policies(graph, deployment_ASPA_policy):
     for asys in deployment_ASPA_policy:
         asys.policy = ASPAPolicy()
+
 
 class FigureRouteLeakExperimentRandom(Experiment):
     graph: ASGraph
     deployment: int
 
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects: int, deployment_policy: int, algorithm: str):
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: [int, int, int],
+                 algorithm: str):
         super().__init__(input_queue, output_queue)
         self.graph = graph
-        self.deployment_objects = deployment_objects
-        self.deployment_policy = deployment_policy
+        self.deployment = deployment
         self.algorithm = algorithm
 
     def run_trial(self, trial: Tuple[(AS_ID, AS_ID)]):
         graph = self.graph
-        deployment_objects = self.deployment_objects
-        deployment_policy = self.deployment_policy
         algorithm = self.algorithm
         # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
-
-        graph.reset_policies() #Reset all AS policies to DefaultPolicy
+        graph.reset_policies()
+        # graph.reset_to_route_leak()  # Reset all AS policies to DefaultPolicy
         graph.clear_rpki_objects()  # Reset all AS policies to DefaultPolicy
-
+        # print("Policies: ")
         # Takes the desired AS as victim out of the full graph by its ID
         victim = graph.get_asys(victim_id)
         if victim is None:
@@ -910,19 +1071,17 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         # Takes AS of attacker out of graph, like did for the victim
         attacker = graph.get_asys(attacker_id)
+        print("First attacker enum: ", attacker.as_id)
         if attacker is None:
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
 
-        if algorithm == 'ASPA':
-            # Set ASPA policies for ASes in the current graph
-            create_ASPA_policies_randomly(graph, deployment_policy)
-            create_ASPA_objects_randomly(graph, deployment_objects)
-        elif algorithm == 'ASCONES':
-            create_ASCONES_policies_randomly(graph, deployment_policy)
-            create_ASCONES_objects_randomly(graph, deployment_objects)
+        elif algorithm == 'DownOnly':
+            down_only_randomly(graph, self.deployment)
 
-        attacker.policy = RouteLeakPolicy() #This will change the attackers policy to leak all routes
+        print(show_policies(graph))
+
+        attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
         # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()
@@ -932,11 +1091,13 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         return result
 
+
 class FigureRouteLeakExperiment(Experiment):
     graph: ASGraph
     deployment: int
 
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List, deployment_policy_list: List, algorithm: str):
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List,
+                 deployment_policy_list: List, algorithm: str):
         super().__init__(input_queue, output_queue)
         self.graph = graph
         self.deployment_objects_list = deployment_objects_list
@@ -951,7 +1112,7 @@ class FigureRouteLeakExperiment(Experiment):
         # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
 
-        graph.reset_policies() #Reset all AS policies to DefaultPolicy
+        graph.reset_policies()  # Reset all AS policies to DefaultPolicy
         graph.clear_rpki_objects()  # Reset all AS policies to DefaultPolicy
 
         # Takes the desired AS as victim out of the full graph by its ID
@@ -977,18 +1138,18 @@ class FigureRouteLeakExperiment(Experiment):
             # Creates ASPA objects for ASes in the current graph
             create_ASCONES_objects(graph, deployment_objects_list)
 
-        attacker.policy = RouteLeakPolicy() #This will change the attackers policy to leak all routes
-        #print("Route Leak AS: ", attacker.as_id)
-        #print("Victim AS: ", victim.as_id)
+        attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
+        # print("Route Leak AS: ", attacker.as_id)
+        # print("Victim AS: ", victim.as_id)
 
-        #show_policies(graph)  # Checking for the distribution of policies
-        #show_aspa_objects(graph) # Show all ASPA objects of graph
-        #show_aspa_objects_count(graph) # Show count of all ASPA objects of graph
+        # show_policies(graph)  # Checking for the distribution of policies
+        # show_aspa_objects(graph) # Show all ASPA objects of graph
+        # show_aspa_objects_count(graph) # Show count of all ASPA objects of graph
 
         # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()
         graph.find_routes_to(victim)
-#        graph.hijack_n_hops(victim, attacker, n_hops)
+        #        graph.hijack_n_hops(victim, attacker, n_hops)
 
         result = route_leak_success_rate(graph, attacker, victim)
 
@@ -999,7 +1160,8 @@ class FigureForgedOriginPrefixHijackExperimentRandom(Experiment):
     graph: ASGraph
     deployment: int
 
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects: int, deployment_policy: int, algorithm: str):
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects: int,
+                 deployment_policy: int, algorithm: str):
         super().__init__(input_queue, output_queue)
         self.graph = graph
         self.deployment_objects = deployment_objects
@@ -1014,7 +1176,7 @@ class FigureForgedOriginPrefixHijackExperimentRandom(Experiment):
         # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
 
-        graph.reset_policies() #Reset all AS policies to DefaultPolicy
+        graph.reset_policies()  # Reset all AS policies to DefaultPolicy
         graph.clear_rpki_objects()  # Reset all AS policies to DefaultPolicy
 
         # Takes the desired AS as victim out of the full graph by its ID
@@ -1037,7 +1199,7 @@ class FigureForgedOriginPrefixHijackExperimentRandom(Experiment):
             create_ASCONES_policies_randomly(graph, deployment_policy)
             create_ASCONES_objects_randomly(graph, deployment_objects)
 
-        attacker.policy = DefaultPolicy() #This will change the attackers policy to default policy in order not to drop her own hijacked route
+        attacker.policy = DefaultPolicy()  # This will change the attackers policy to default policy in order not to drop her own hijacked route
 
         # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()
@@ -1048,11 +1210,13 @@ class FigureForgedOriginPrefixHijackExperimentRandom(Experiment):
 
         return result
 
+
 class FigureForgedOriginPrefixHijackExperiment(Experiment):
     graph: ASGraph
     deployment: int
 
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List, deployment_policy_list: List, algorithm: str):
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List,
+                 deployment_policy_list: List, algorithm: str):
         super().__init__(input_queue, output_queue)
         self.graph = graph
         self.deployment_objects_list = deployment_objects_list
@@ -1067,7 +1231,7 @@ class FigureForgedOriginPrefixHijackExperiment(Experiment):
         # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
 
-        graph.reset_policies() #Reset all AS policies to DefaultPolicy
+        graph.reset_policies()  # Reset all AS policies to DefaultPolicy
         graph.clear_rpki_objects()  # Reset all AS policies to DefaultPolicy
 
         # Takes the desired AS as victim out of the full graph by its ID
@@ -1093,13 +1257,13 @@ class FigureForgedOriginPrefixHijackExperiment(Experiment):
             # Creates ASPA objects for ASes in the current graph
             create_ASCONES_objects(graph, deployment_objects_list)
 
-        attacker.policy = DefaultPolicy() #This will change the attackers policy to default policy in order not to drop her own hijacked route
-        #print("Route Leak AS: ", attacker.as_id)
-        #print("Victim AS: ", victim.as_id)
+        attacker.policy = DefaultPolicy()  # This will change the attackers policy to default policy in order not to drop her own hijacked route
+        # print("Route Leak AS: ", attacker.as_id)
+        # print("Victim AS: ", victim.as_id)
 
-        #show_policies(graph)  # Checking for the distribution of policies
-        #show_aspa_objects(graph) # Show all ASPA objects of graph
-        #show_aspa_objects_count(graph) # Show count of all ASPA objects of graph
+        # show_policies(graph)  # Checking for the distribution of policies
+        # show_aspa_objects(graph) # Show all ASPA objects of graph
+        # show_aspa_objects_count(graph) # Show count of all ASPA objects of graph
 
         # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()

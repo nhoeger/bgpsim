@@ -6,7 +6,7 @@ import pickle
 
 import bgpsecsim.error as error
 from bgpsecsim.asys import AS, AS_ID, Relation, Route, RoutingPolicy
-from bgpsecsim.routing_policy import DefaultPolicy
+from bgpsecsim.routing_policy import DefaultPolicy, RouteLeakPolicy, DownOnlyPolicy
 
 
 def parse_as_rel_file_CAIDA(filename: str) -> nx.Graph:
@@ -242,6 +242,10 @@ class ASGraph(object):
     def reset_policies(self) -> None:
         for asys in self.asyss.values():
             asys.policy = DefaultPolicy()
+
+    def reset_to_route_leak(self) -> None:
+        for asys in self.asyss.values():
+            asys.policy = RouteLeakPolicy()
 
     def clear_rpki_objects(self) -> None:
         for asys in self.asyss.values():
