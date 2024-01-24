@@ -567,6 +567,7 @@ def perform_down_only(route) -> bool:
         print("Down Only validation detected Route Leak. Dropping Route.")
         return False
 
+
     # Ingress policy 2:
     # If a route with DO Community is received from a Peer (non-transit) and
     # at least one DO value is not equal to the sending neighbor's ASN, then
@@ -593,7 +594,11 @@ def perform_down_only(route) -> bool:
                     route.local_data_part_do += str(route.final.as_id) + " "
         else:
             route.local_data_part_do += str(route.final.as_id) + " "
-    return True
+
+    if not do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+        return True
+
+    return False
 
 
 class DownOnlyPolicy(DefaultPolicy):

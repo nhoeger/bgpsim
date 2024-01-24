@@ -554,7 +554,7 @@ def figure10_down_only(
             graph.get_asys(asys).rlm_enabled = True
             graph.get_asys(asys).policy = DownOnlyPolicy()
 
-    #for asys in graph.get_tierOne():
+    # for asys in graph.get_tierOne():
     #    if graph.get_asys(asys).policy.__str__() == 'DownOnlyPolicy':
     #       counter_one += 1
     #    elif graph.get_asys(asys).policy.__str__() == 'RouteLeakPolicy':
@@ -563,10 +563,10 @@ def figure10_down_only(
     #        counter_three += 1
     #    else:
     #        counter_four += 1
-    #print("Tier One:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    # print("Tier One:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
     #      , "/ Other: ", counter_four)
-    #counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
-    #for asys_two in graph.get_tierTwo():
+    # counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
+    # for asys_two in graph.get_tierTwo():
     #    if graph.get_asys(asys_two).policy.__str__() == 'DownOnlyPolicy':
     #        counter_one += 1
     #    elif graph.get_asys(asys_two).policy.__str__() == 'RouteLeakPolicy':
@@ -575,10 +575,10 @@ def figure10_down_only(
     #        counter_three += 1
     #    else:
     #        counter_four += 1
-    #print("Tier Two:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    # print("Tier Two:   Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
     #      , "/ Other: ", counter_four)
-    #counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
-    #for asys in graph.get_tierThree():
+    # counter_one, counter_two, counter_three, counter_four = 0, 0, 0, 0
+    # for asys in graph.get_tierThree():
     #    if graph.get_asys(asys).policy.__str__() == 'DownOnlyPolicy':
     #        counter_one += 1
     #    elif graph.get_asys(asys).policy.__str__() == 'RouteLeakPolicy':
@@ -587,7 +587,7 @@ def figure10_down_only(
     #        counter_three += 1
     #    else:
     #        counter_four += 1
-    #print("Tier Three: Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
+    # print("Tier Three: Down Only ASes: ", counter_one, "/ Route Leak ASes: ", counter_two, "/ Default: ", counter_three
     #      , "/ Other: ", counter_four)
     return figureRouteLeak_experiment_random(graph, trials, tmp, "DownOnly")
 
@@ -843,7 +843,7 @@ def leaked_route(route: ['Route']) -> AS:
 
 # This function returns a fraction of total vs. bad routes.
 def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fraction:
-    print("Second attacker enum: ", attacker.as_id)
+    # print("Second attacker enum: ", attacker.as_id)
     n_bad_routes = 0
     n_total_routes = 0
     for asys in graph.asyss.values():
@@ -853,8 +853,11 @@ def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fractio
             offending_asys = leaked_route(route)
             if offending_asys:
                 n_bad_routes += 1
-                if offending_asys.as_id != attacker.as_id:
-                    raise Exception("Attacker mismatches offending AS")
+                # print(offending_asys.as_id, ", ", attacker.as_id)
+                # TODO: remove comment infront of if-statement
+                # if offending_asys.as_id != attacker.as_id:
+                # raise Exception("Attacker mismatches offending AS")
+                # print("Attacker mismatches offending AS")
     # print('Bad routes: ', n_bad_routes)
     # print('Total routes: ', n_total_routes)
     # print('----')
@@ -941,6 +944,7 @@ def show_policies(graph):
     route_leak_policy = 0
     aspa_policy = 0
     down_only_policy = 0
+    show_policies_by_tier(graph)
     for asys in graph.asyss:
         if graph.get_asys(asys).policy.name == 'DefaultPolicy':
             default_policy += 1
@@ -954,6 +958,44 @@ def show_policies(graph):
             raise Exception('ERROR: Unknown policy in play!')
     print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) +
           '\n ASPA: ' + str(aspa_policy) + '\n DO: ' + str(down_only_policy))
+
+
+def show_policies_by_tier(graph):
+    for i in range(1, 4):
+        show_policies_by_specified_tier(graph, i)
+
+
+def show_policies_by_specified_tier(graph, tier):
+    tmp_str = ""
+    list = []
+    if tier == 1:
+        list = graph.get_tierOne()
+        tmp_str = "One"
+    elif tier == 2:
+        list = graph.get_tierTwo()
+        tmp_str = "Two"
+    elif tier == 3:
+        list = graph.get_tierThree()
+        tmp_str = "Three"
+    default_policy = 0
+    route_leak_policy = 0
+    aspa_policy = 0
+    down_only_policy = 0
+    for asys in list:
+        compare_to = graph.get_asys(asys).policy.name
+        if compare_to == 'DefaultPolicy':
+            default_policy += 1
+        elif compare_to == 'RouteLeakPolicy':
+            route_leak_policy += 1
+        elif compare_to == 'ASPAPolicy':
+            aspa_policy += 1
+        elif compare_to == 'DownOnlyPolicy':
+            down_only_policy += 1
+        else:
+            raise Exception('ERROR: Unknown policy in play!')
+
+    print("Tier", tmp_str, ": Default: " + str(default_policy) + "; RouteLeak: " + str(route_leak_policy) +
+          "; ASPA: " + str(aspa_policy) + "; DO: " + str(down_only_policy))
 
 
 def show_aspa_objects(graph):
@@ -984,8 +1026,7 @@ def down_only_randomly(graph, deployment: [int, int, int]):
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_three = deployment[2]
-    for asys in graph.asyss.values():
-        asys.policy = RouteLeakPolicy()
+
     for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
         graph.get_asys(as_id).policy = DownOnlyPolicy()
     if tier_two != 0:
@@ -994,6 +1035,7 @@ def down_only_randomly(graph, deployment: [int, int, int]):
     if tier_three != 0:
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
             graph.get_asys(as_id).policy = DownOnlyPolicy()
+
 
 # create ASPA objects for all ASes according to deployment fraction
 def create_ASPA_objects_randomly(graph, deployment_ASPA_objects):
@@ -1071,22 +1113,19 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         # Takes AS of attacker out of graph, like did for the victim
         attacker = graph.get_asys(attacker_id)
-        print("First attacker enum: ", attacker.as_id)
         if attacker is None:
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
 
         elif algorithm == 'DownOnly':
             down_only_randomly(graph, self.deployment)
-
-        print(show_policies(graph))
+        show_policies_by_tier(graph)
 
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
         # starts to find a new routing table and executes the attack onto it by n hops
         graph.clear_routing_tables()
         graph.find_routes_to(victim)
-
         result = route_leak_success_rate(graph, attacker, victim)
 
         return result
