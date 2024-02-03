@@ -558,15 +558,12 @@ def perform_down_only(route) -> bool:
     do_set = route.local_data_part_do != ""
     relation_to_sender = route.final.get_relation(route.first_hop)
 
-    if do_set:
-        print("Do Set!")
     # Ingress policy 1:
     # If a route with DO Community is received from a Customer or RS-client,
     # then it is a route leak and MUST be dropped. The procedure halts.
     if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
         print("Down Only validation detected Route Leak. Dropping Route.")
         return False
-
 
     # Ingress policy 2:
     # If a route with DO Community is received from a Peer (non-transit) and
@@ -595,10 +592,10 @@ def perform_down_only(route) -> bool:
         else:
             route.local_data_part_do += str(route.final.as_id) + " "
 
-    if not do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
-        return True
+    # if not do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+    #    return True
 
-    return False
+    return True
 
 
 class DownOnlyPolicy(DefaultPolicy):
@@ -611,8 +608,6 @@ class DownOnlyPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_down_only(route)
-        if not result and result:
-            print("Down Only Validation invalid -> Not accepting the route")
         return super_result and result
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
@@ -632,6 +627,7 @@ class DownOnlyPolicy(DefaultPolicy):
             # MUST be added with value equal to the ASN of the sender.
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
                 route.local_data_part_do += asn.as_id
+                return True
             return True
         else:
             return False

@@ -675,32 +675,80 @@ def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
 
 def figure10_3e(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
-    #print("Trials: ", trials)
-    #a, b = trials
 
-    deployments_tier_three = np.arange(0, 101, 50)
-    deployments_tier_two = np.arange(0, 101, 50)
-    deployments_tier_one = np.arange(0, 101, 50)
+    deployments_tier_three = np.arange(0, 101, 100)
+    deployments_tier_two = np.arange(0, 101, 100)
+    deployments_tier_one = np.arange(0, 101, 100)
 
-    line1_results = []
-    for deployment in deployments_tier_three:
-        for deployment2 in deployments_tier_two:
-            for deployment3 in deployments_tier_one:
-                print("+------------------------------------------------------------------------------+")
-                print(f"Down Only deployment = {deployment3, deployment2, deployment})")
-                app = fmean(experiments.figure10_down_only(nx_graph, [deployment, deployment2], trials, deployment3))
-                print("Appending: ", app)
-                line1_results.append(app)
-        data_between = np.asarray(line1_results)
-        np.savetxt(filename + '_backup' + str(deployment) + '.csv', data_between, delimiter=',')
+    # line1_results = []
+    # for deployment in deployments_tier_three:
+    #    for deployment2 in deployments_tier_two:
+    #        for deployment3 in deployments_tier_one:
+    #            app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment, deployment2], trials, deployment3))
+    #            print(f"Down Only deployment = {deployment3, deployment2, deployment}); Result: ", app)
+    #            line1_results.append(app)
+    #    data_between = np.asarray(line1_results)
+    #    np.savetxt(filename + '_backup' + str(deployment) + '.csv', data_between, delimiter=',')
 
-    data = np.asarray(line1_results)
-    np.savetxt(filename + '.csv', data, delimiter=',')
+    # data = np.asarray(line1_results)
+    # np.savetxt(filename + '.csv', data, delimiter=',')
 
-    print(line1_results)
+    #print(line1_results)
 
     # eval.evaluate(data, filename, 10)
+    result_tier_one = []
+    result_tier_two = []
+    result_tier_three = []
+    result_attacker_success_rate = []
 
+    for deployment_three in deployments_tier_three:
+        for deployment_two in deployments_tier_two:
+            for deployment_one in deployments_tier_one:
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials, deployment_one))
+                result_attacker_success_rate.append(app)
+                result_tier_one.append(deployment_one)
+                result_tier_two.append(deployment_two)
+                result_tier_three.append(deployment_three)
+                print(f"Down Only deployment = {deployment_one, deployment_two, deployment_three}); Result: ", app)
+                # print("Result Tier One: ", result_tier_one)
+                # print("Result Tier Two: ", result_tier_two)
+                # print("Result Tier Three: ", result_tier_three)
+                # print("Result attacker: ", result_attacker_success_rate)
+                # data_between = np.asarray(result_attacker_success_rate)
+                # np.savetxt(filename + '_backup' + str(deployment) + '.csv', data_between, delimiter=',')
+    #print(result_tier_one)
+    #print(result_tier_two)
+    #print(result_tier_three)
+    #print(result_attacker_success_rate)
+    #plt.figure(figsize=(10, 7))
+    #plt.plot(result_tier_three, result_tier_one, label="Result Tier One")
+    #plt.plot(result_tier_three, result_tier_two, label="Result Tier Two")
+    # plt.plot(deployments_tier_three, result_tier_three, label="Result Tier Three")
+    #plt.plot(result_tier_three, result_attacker_success_rate, label="Attacker Success Rate")
+
+    #plt.legend()
+    #plt.xlabel("Deployment at percentage of Tier2 providers")
+    #plt.ylabel("Attacker's Success Rate (in %)")
+    #plt.show()
+
+
+    # Erste Y-Achse
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel('X-Achse')
+    ax1.plot(result_tier_three, result_attacker_success_rate, label="Result Tier One", color='blue')
+    ax1.set_ylabel('Y-Achse (0.0 bis 5.0)', color='blue')
+    ax1.tick_params('y', colors='blue')
+
+    # Zweite Y-Achse
+    ax2 = ax1.twinx()
+    ax2.plot(result_tier_three, result_tier_one, label="Result Tier One", color='red')
+    ax2.set_ylabel('Percentage of deployment', color='red')
+    ax2.set_ylim(0, 100)
+    ax2.tick_params('y', colors='red')
+
+    plt.title('Increased deployment per tier.')
+    plt.show()
+    # plt.savefig(filename)
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure10(filename, nx_graph, n_trials, 100)
