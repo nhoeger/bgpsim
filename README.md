@@ -1,4 +1,4 @@
-# Integration of BGP Rules into the BGPsim Environment
+# Integration of BGP Roles into the BGPsim Environment
 Under active development\
-Status of README: 14.12.23\
+Status of README: 03.02.24\
 Contact: nils.hoeger@unibw.de 
