@@ -787,6 +787,58 @@ def figure_down_only_2(filename: str, nx_graph: nx.Graph, n_trials: int):
     plt.show()
     plt.savefig(filename)
 
+
+# Select top ISPs
+def figure_down_only_3(filename: str, nx_graph: nx.Graph, n_trials: int):
+    print("Testing Figure 3")
+    trials = uniform_random_trials(nx_graph, n_trials)
+    steps = 10
+    deployments_tier_one = np.arange(0, 101, steps)
+    deployments_tier_two = np.arange(steps, 101, steps)
+
+    x_axes = []
+    counter = 0
+    result_tier_one = []
+    result_tier_two = []
+    result_attacker_success_rate = []
+
+    for deployment_one in deployments_tier_one:
+        counter += 1
+        x_axes.append(counter)
+        app = fmean(experiments.figure10_down_only_top_isp(nx_graph, [0, 0], trials, deployment_one))
+        result_attacker_success_rate.append(app)
+        result_tier_one.append(deployment_one)
+        result_tier_two.append(0)
+        print(f"Down Only deployment = {deployment_one, 0, 0}); Result: ", app)
+
+    for deployment_two in deployments_tier_two:
+        counter += 1
+        x_axes.append(counter)
+        app = fmean(experiments.figure10_down_only_top_isp(nx_graph, [0, deployment_two], trials, 100))
+        result_attacker_success_rate.append(app)
+        result_tier_one.append(100)
+        result_tier_two.append(deployment_two)
+        print(f"Down Only deployment = {100, deployment_two, 0}); Result: ", app)
+
+    _, ax1 = plt.subplots()
+    ax1.set_xlabel('X-Axes')
+    ax1.plot(x_axes, result_attacker_success_rate, label="Result Tier One", color='blue', linewidth=1.5)
+    ax1.set_ylabel('Y-Axes (0.0 to 5.0)', color='blue')
+    ax1.tick_params('y', colors='blue')
+    ax1.set_ylim(0, 5)
+
+    ax2 = ax1.twinx()
+    ax2.plot(x_axes, result_tier_one, label="Result Tier One", color='red')
+    ax2.plot(x_axes, result_tier_two, label="Result Tier Two", color='green')
+    ax2.set_ylim(0, 110)
+    ax2.tick_params('y', colors='red')
+
+    plt.legend()
+    plt.title('Increased deployment per tier.')
+    plt.show()
+    plt.savefig(filename)
+
+
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure10(filename, nx_graph, n_trials, 100)
 

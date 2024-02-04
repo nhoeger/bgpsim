@@ -164,6 +164,22 @@ class ASGraph(object):
         isps.sort(key=lambda pair: -pair[1][Relation.CUSTOMER])
         return [asys for asys, _ in isps[:n]]
 
+    def identify_top_isp_from_tier_one(self, n: int) -> List[AS]:
+        """Top ISPs by customer degree."""
+        tier_one = [self.get_asys(as_id) for as_id in self.get_tierOne()]
+        isp = [(asys, asys.neighbor_counts_by_relation())
+                for asys in tier_one]
+        isp.sort(key=lambda pair: -pair[1][Relation.CUSTOMER])
+        return [asys for asys, _ in isp[:n]]
+
+    def identify_top_isp_from_tier_two(self, n: int) -> List[AS]:
+        """Top ISPs by customer degree."""
+        tier_two = [self.get_asys(as_id) for as_id in self.get_tierTwo()]
+        isp = [(asys, asys.neighbor_counts_by_relation())
+                for asys in tier_two]
+        isp.sort(key=lambda pair: -pair[1][Relation.CUSTOMER])
+        return [asys for asys, _ in isp[:n]]
+
     def get_providers(self, ids: List[AS_ID]) -> List[AS]:
         """Return providers of a list of ASes, as a set"""
         providers = set([])

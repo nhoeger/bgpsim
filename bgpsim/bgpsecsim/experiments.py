@@ -296,6 +296,38 @@ def figureRouteLeak_experiment_random(
 
     return results
 
+def figureRouteLeak_experiment_top_isps(
+        graph: ASGraph,
+        trials: List[Tuple[AS_ID, AS_ID]],
+        deployment: [int, int, int],
+        algorithm: str
+) -> List[Fraction]:
+    trial_queue: mp.Queue = mp.Queue()
+    result_queue: mp.Queue = mp.Queue()
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, deployment, algorithm)
+               for _ in range(PARALLELISM)]
+    for worker in workers:
+        worker.start()
+
+    for trial in trials:
+        trial_queue.put(trial)
+
+    results = []
+    for _ in range(len(trials)):
+        result = result_queue.get()
+        results.append(result)
+
+    for worker in workers:
+        worker.stop()
+    for worker in workers:
+        trial_queue.put(None)
+    for worker in workers:
+        worker.join()
+
+    return results
+
 
 def figureForgedOrigin_experiment_random(
         graph: ASGraph,
@@ -534,6 +566,17 @@ def figure10_down_only_random(
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]], "DownOnly")
+
+
+def figure10_down_only_top_isp(
+        nx_graph: nx.Graph,
+        # deployment over AS per percentage in [tier2, tier3]
+        deployment: [int, int],
+        trials: List[Tuple[AS_ID, AS_ID]],
+        tier_one: int
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    return figureRouteLeak_experiment_top_isps(graph, trials, [tier_one, deployment[1], deployment[0]], "DownOnlyTopISP")
 
 
 # In this method, each and every trial run chooses his ASPA ASes randomly for object creation and policy deployment (compared to choosing it once randomly for all trial runs)
@@ -980,6 +1023,20 @@ def down_only_randomly(graph, deployment: [int, int, int]):
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
             graph.get_asys(as_id).policy = DownOnlyPolicy()
 
+def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int]):
+    tier_one = deployment[0]
+    tier_two = deployment[1]
+    tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
+    tier_one_two_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
+
+    for as_object in tier_one_top_isp:
+        as_number = as_object.as_id
+        graph.get_asys(as_number).policy = DownOnlyPolicy()
+    if tier_two != 0:
+        for as_object in tier_one_two_isp:
+            as_number = as_object.as_id
+            graph.get_asys(as_number).policy = DownOnlyPolicy()
+
 
 # create ASPA objects for all ASes according to deployment fraction
 def create_ASPA_objects_randomly(graph, deployment_ASPA_objects):
@@ -1064,6 +1121,9 @@ class FigureRouteLeakExperimentRandom(Experiment):
         elif algorithm == 'DownOnly':
             down_only_randomly(graph, self.deployment)
         # show_policies_by_tier(graph)
+
+        elif algorithm == 'DownOnlyTopISP':
+            down_only_randomly_top_isp(graph, self.deployment)
 
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
