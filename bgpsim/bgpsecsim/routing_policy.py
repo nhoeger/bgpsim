@@ -659,10 +659,8 @@ class DownOnlyPolicy(DefaultPolicy):
             # MUST be added with value equal to the ASN of the sender.
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
                 route.local_data_part_do += asn.as_id
-                return True
-            return True
-        else:
-            return False
+
+        return super_forward
 
 
 class OnlyToCustomerPolicy(DefaultPolicy):
