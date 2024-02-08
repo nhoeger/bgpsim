@@ -299,7 +299,7 @@ def figureRouteLeak_experiment_random(
 def figureRouteLeak_experiment_top_isps(
         graph: ASGraph,
         trials: List[Tuple[AS_ID, AS_ID]],
-        deployment: [int, int, int],
+        deployment: List[int],
         algorithm: str
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
@@ -577,6 +577,16 @@ def figure10_down_only_top_isp(
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_top_isps(graph, trials, [tier_one, deployment[1], deployment[0]], "DownOnlyTopISP")
+
+def figure10_down_only_combined(
+        nx_graph: nx.Graph,
+        # deployment over AS per percentage in [tier2, tier3]
+        deployment: [int, int, int, int, int, int],
+        trials: List[Tuple[AS_ID, AS_ID]]
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    # TODO: Change called function
+    return figureRouteLeak_experiment_top_isps(graph, trials, deployment, "Combined")
 
 
 # In this method, each and every trial run chooses his ASPA ASes randomly for object creation and policy deployment (compared to choosing it once randomly for all trial runs)
@@ -1010,10 +1020,12 @@ def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
 
 
 def down_only_randomly(graph, deployment: [int, int, int]):
+    if len(deployment) != 3:
+        warnings.warn("Parsed deployment does not match required format.")
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_three = deployment[2]
-    # print("Creating for following numbers: 1: ", tier_one, "; 2: ", tier_two, ";3: ", tier_three)
+
     for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
         graph.get_asys(as_id).policy = DownOnlyPolicy()
     if tier_two != 0:
@@ -1088,24 +1100,28 @@ def create_ASPA_policies(graph, deployment_ASPA_policy):
 
 class FigureRouteLeakExperimentRandom(Experiment):
     graph: ASGraph
-    deployment: int
+    deployment: List[int]
 
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: [int, int, int],
-                 algorithm: str):
+    #def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: List[int],
+    #             algorithm: str, ):
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List,
+                 deployment_policy_list: List, algorithm: str, deployment = None):
         super().__init__(input_queue, output_queue)
         self.graph = graph
+        self.deployment_objects_list = deployment_objects_list
+        self.deployment_policy_list = deployment_policy_list
         self.deployment = deployment
         self.algorithm = algorithm
 
     def run_trial(self, trial: Tuple[(AS_ID, AS_ID)]):
         graph = self.graph
         algorithm = self.algorithm
+
         # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
         victim_id, attacker_id = trial
         graph.reset_policies()
-        # graph.reset_to_route_leak()  # Reset all AS policies to DefaultPolicy
-        graph.clear_rpki_objects()  # Reset all AS policies to DefaultPolicy
-        # print("Policies: ")
+        graph.clear_rpki_objects()
+
         # Takes the desired AS as victim out of the full graph by its ID
         victim = graph.get_asys(victim_id)
         if victim is None:
@@ -1119,11 +1135,22 @@ class FigureRouteLeakExperimentRandom(Experiment):
             return Fraction(0, 1)
 
         elif algorithm == 'DownOnly':
+            if self.deployment is None:
+                warnings.warn(f"No deployment parsed!")
+                return Fraction(0, 1)
             down_only_randomly(graph, self.deployment)
-        # show_policies_by_tier(graph)
 
         elif algorithm == 'DownOnlyTopISP':
+            if self.deployment is None:
+                warnings.warn(f"No deployment parsed!")
+                return Fraction(0, 1)
             down_only_randomly_top_isp(graph, self.deployment)
+
+        elif algorithm == 'Combined':
+            print("Combined approach")
+            down_only_randomly(graph, self.deployment)
+            create_ASPA_policies(graph, self.deployment_policy_list)
+            create_ASPA_objects(graph, self.deployment_objects_list)
 
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 

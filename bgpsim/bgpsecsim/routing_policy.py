@@ -598,6 +598,38 @@ def perform_down_only(route) -> bool:
     return True
 
 
+# RFC 9234
+def perform_only_to_customer(route) -> bool:
+    do_set = route.local_data_part_do != ""
+    relation_to_sender = route.final.get_relation(route.first_hop)
+
+    # Ingress policy 1:
+    # If a route with the OTC Attribute is received from a Customer or RS-client,
+    # then it is a route leak and MUST be dropped. The procedure halts.
+    if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
+        print("Down Only validation detected Route Leak. Dropping Route.")
+        return False
+
+    # Ingress policy 2:
+    # If a route with the OTC Attribute is received from a Peer (non-transit) and
+    # the Attribute has a value that is not equal to the remote (i.e., Peer's) AS
+    # number, then it is a route leak and MUST be considered ineligible.
+    if do_set and relation_to_sender == Relation.PEER:
+        for i in route.local_data_part_do.split():
+            if i != route.first_hop.as_id:
+                return False
+
+    # Ingress policy 3:
+    # If a route is received from a Provider, a Peer, or an RS and the OTC Attribute
+    # is not present, then it MUST be added with a value equal to the AS number of
+    # the remote AS.
+    if not do_set and (relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or
+                       relation_to_sender == Relation.RS_CLIENT):
+        route.local_data_part_do += str(route.final.as_id) + " "
+
+    return True
+
+
 class DownOnlyPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'DownOnlyPolicy'
@@ -631,3 +663,39 @@ class DownOnlyPolicy(DefaultPolicy):
             return True
         else:
             return False
+
+
+class OnlyToCustomerPolicy(DefaultPolicy):
+    def __init__(self):
+        self.name = 'OnlyToCustomerPolicy'
+
+    def __str__(self):
+        return self.name
+
+    def accept_route(self, route: Route) -> bool:
+        super_result = DefaultPolicy().accept_route(route)
+        result = perform_only_to_customer(route)
+        return super_result and result
+
+    def forward_to(self, route: Route, relation: Relation) -> bool:
+        do_set = route.local_data_part_do != ""
+        super_forward = DefaultPolicy().forward_to(route, relation)
+        asn = route.final
+
+        if super_forward:
+            # egress policy 1
+            # If a route is to be advertised to a Customer, a Peer, or an RS-Client (when the
+            # sender is an RS), and the OTC Attribute is not present, then when advertising the
+            # route, an OTC Attribute MUST be added with a value equal to the AS number of the
+            # local AS.
+            if not do_set and (relation == Relation.CUSTOMER or relation == Relation.PEER or
+                               relation == Relation.RS_CLIENT):
+                route.local_data_part_do += asn.as_id
+
+            # egress policy 2
+            # If a route is sent to a Customer or Peer, then a DO Community MUST be added with
+            # value equal to the ASN of the sender
+            if relation == Relation.CUSTOMER or relation == Relation.PEER:
+                route.local_data_part_do += asn.as_id
+
+        return super_forward
