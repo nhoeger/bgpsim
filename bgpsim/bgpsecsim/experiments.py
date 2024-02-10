@@ -274,7 +274,8 @@ def figureRouteLeak_experiment_random(
     result_queue: mp.Queue = mp.Queue()
     # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
     # Make sure to reset policies and routing tables when reusing a worker!
-    workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, deployment, algorithm)
+    workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, [],
+                                               [],algorithm, deployment)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
