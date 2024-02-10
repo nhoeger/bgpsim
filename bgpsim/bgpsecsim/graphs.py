@@ -679,9 +679,9 @@ def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
 def figure_down_only_1(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
 
-    deployments_tier_three = np.arange(0, 101, 50)
-    deployments_tier_two = np.arange(0, 101, 50)
-    deployments_tier_one = np.arange(0, 101, 50)
+    deployments_tier_three = np.arange(0, 101, 1)
+    deployments_tier_two = np.arange(0, 101, 1)
+    deployments_tier_one = np.arange(0, 101, 1)
 
     x_axes = []
     counter = 0
