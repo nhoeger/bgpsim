@@ -2,7 +2,7 @@ import sys
 from fractions import Fraction
 import itertools
 import math
-
+import time
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -678,10 +678,11 @@ def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
 # Steps: 1 %
 def figure_down_only_1(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
-
-    deployments_tier_three = np.arange(0, 101, 1)
-    deployments_tier_two = np.arange(0, 101, 1)
-    deployments_tier_one = np.arange(0, 101, 1)
+    start_time = time.time()
+    deployments_tier_one = np.arange(0, 101, 5)
+    deployments_tier_two = np.arange(0, 101, 5)
+    # Thesis: Tier three has no effect 
+    deployments_tier_three = np.arange(0, 101, 50)
 
     x_axes = []
     counter = 0
@@ -702,6 +703,10 @@ def figure_down_only_1(filename: str, nx_graph: nx.Graph, n_trials: int):
                 result_tier_two.append(deployment_two)
                 result_tier_three.append(deployment_three)
                 print(f"Down Only deployment = {deployment_one, deployment_two, deployment_three}); Result: ", app)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("Elapsed time: ", elapsed_time)
 
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('X-Axes')
