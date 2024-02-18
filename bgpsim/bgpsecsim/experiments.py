@@ -1046,7 +1046,16 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
             graph.get_asys(as_id).policy = policy
 
 
-def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int]):
+def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int], algorithm: str):
+    if len(deployment) != 2:
+        warnings.warn("Parsed deployment does not match required format.")
+    policy = DownOnlyPolicy()
+    if algorithm == "DownOnly":
+        policy = DownOnlyPolicy()
+    elif algorithm == "OTC":
+        policy = OnlyToCustomerPolicy()
+    else:
+        warnings.warn("No valid algorithm parsed.")
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
@@ -1054,11 +1063,11 @@ def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int]):
 
     for as_object in tier_one_top_isp:
         as_number = as_object.as_id
-        graph.get_asys(as_number).policy = DownOnlyPolicy()
+        graph.get_asys(as_number).policy = policy
     if tier_two != 0:
         for as_object in tier_one_two_isp:
             as_number = as_object.as_id
-            graph.get_asys(as_number).policy = DownOnlyPolicy()
+            graph.get_asys(as_number).policy = policy
 
 
 # create ASPA objects for all ASes according to deployment fraction
@@ -1161,7 +1170,13 @@ class FigureRouteLeakExperimentRandom(Experiment):
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
-            down_only_randomly_top_isp(graph, self.deployment)
+            down_only_randomly_top_isp(graph, self.deployment, "DownOnly")
+
+        elif algorithm == 'OTC_ISP':
+            if self.deployment is None:
+                warnings.warn(f"No deployment parsed!")
+                return Fraction(0, 1)
+            down_only_randomly_top_isp(graph, self.deployment, "OTC")
 
         elif algorithm == 'Combined':
             print("Combined approach")
