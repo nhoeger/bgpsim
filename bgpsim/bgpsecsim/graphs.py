@@ -748,9 +748,9 @@ def figure_two_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int
 def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
     trials = uniform_random_trials(nx_graph, n_trials)
     steps = 10
-    deployments_tier_one = np.arange(0, 101, steps)
-    deployments_tier_two = np.arange(steps, 101, steps)
-    deployments_tier_three = np.arange(steps, 101, steps)
+    deployments_tier_one = np.arange(0, 101, 5)
+    deployments_tier_two = np.arange(steps, 101, 5)
+    deployments_tier_three = np.arange(steps, 101, 50)
 
     x_axes = []
     counter = 0
