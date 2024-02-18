@@ -14,7 +14,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy, OnlyToCustomerPolicy
 )
 
 PARALLELISM = 250
@@ -563,10 +563,11 @@ def figure10_down_only_random(
         # deployment over AS per percentage in [tier2, tier3]
         deployment: [int, int],
         trials: List[Tuple[AS_ID, AS_ID]],
-        tier_one: int
+        tier_one: int,
+        algorithm: str
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
-    return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]], "DownOnly")
+    return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]], algorithm)
 
 
 def figure10_down_only_top_isp(
@@ -1020,21 +1021,30 @@ def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
         # graph.get_asys(as_id).create_dummy_aspa()
 
 
-def down_only_randomly(graph, deployment: [int, int, int]):
+def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
+    policy = DownOnlyPolicy()
+    if algorithm == "DownOnly":
+        policy = DownOnlyPolicy()
+    elif algorithm == "OTC":
+        policy = OnlyToCustomerPolicy()
+    else:
+        warnings.warn("No valid algorithm parsed.")
+
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_three = deployment[2]
 
     for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
-        graph.get_asys(as_id).policy = DownOnlyPolicy()
+        graph.get_asys(as_id).policy = policy
     if tier_two != 0:
         for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two)):
-            graph.get_asys(as_id).policy = DownOnlyPolicy()
+            graph.get_asys(as_id).policy = policy
     if tier_three != 0:
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
-            graph.get_asys(as_id).policy = DownOnlyPolicy()
+            graph.get_asys(as_id).policy = policy
+
 
 def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int]):
     tier_one = deployment[0]
@@ -1139,7 +1149,13 @@ class FigureRouteLeakExperimentRandom(Experiment):
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
-            down_only_randomly(graph, self.deployment)
+            do_otc_randomly(graph, self.deployment, algorithm)
+
+        elif algorithm == 'OTC':
+            if self.deployment is None:
+                warnings.warn(f"No deployment parsed!")
+                return Fraction(0, 1)
+            do_otc_randomly(graph, self.deployment, algorithm)
 
         elif algorithm == 'DownOnlyTopISP':
             if self.deployment is None:
@@ -1149,7 +1165,7 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         elif algorithm == 'Combined':
             print("Combined approach")
-            down_only_randomly(graph, self.deployment)
+            do_otc_randomly(graph, self.deployment, algorithm)
             create_ASPA_policies(graph, self.deployment_policy_list)
             create_ASPA_objects(graph, self.deployment_objects_list)
 

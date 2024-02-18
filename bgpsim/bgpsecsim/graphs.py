@@ -673,10 +673,18 @@ def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
     # eval.evaluate(data, filename, 10)
 
 
+def figure_one_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
+    figure_down_only_one(filename, nx_graph, n_trials, "DownOnly")
+
+
+def figure_one_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int):
+    figure_down_only_one(filename, nx_graph, n_trials, "OTC")
+
+
 # Increase deployment of down-only for each tier starting with tier one, finishing with tier three
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
-def figure_down_only_1(filename: str, nx_graph: nx.Graph, n_trials: int):
+def figure_down_only_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
     trials = uniform_random_trials(nx_graph, n_trials)
     start_time = time.time()
     deployments_tier_one = np.arange(0, 101, 5)
@@ -697,7 +705,7 @@ def figure_down_only_1(filename: str, nx_graph: nx.Graph, n_trials: int):
                 counter += 1
                 x_axes.append(counter)
                 app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials,
-                                                                  deployment_one))
+                                                                  deployment_one, algorithm))
                 result_attacker_success_rate.append(app)
                 result_tier_one.append(deployment_one)
                 result_tier_two.append(deployment_two)
