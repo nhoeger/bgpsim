@@ -710,7 +710,7 @@ def figure_roles_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm
                 result_tier_one.append(deployment_one)
                 result_tier_two.append(deployment_two)
                 result_tier_three.append(deployment_three)
-                print(f"Down Only deployment = {deployment_one, deployment_two, deployment_three}); Result: ", app)
+                print(f"Deployment", algorithm, " = {deployment_one, deployment_two, deployment_three}); Result: ", app)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -767,7 +767,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
         result_tier_one.append(deployment_one)
         result_tier_two.append(0)
         result_tier_three.append(0)
-        print(f"Down Only deployment = {deployment_one, 0, 0}); Result: ", app)
+        print(f"Deployment", algorithm, " = {deployment_one, 0, 0}); Result: ", app)
 
     for deployment_two in deployments_tier_two:
         counter += 1
@@ -777,7 +777,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
         result_tier_one.append(100)
         result_tier_two.append(deployment_two)
         result_tier_three.append(0)
-        print(f"Down Only deployment = {100, deployment_two, 0}); Result: ", app)
+        print(f"Deployment", algorithm, " = {100, deployment_two, 0}); Result: ", app)
 
     for deployment_three in deployments_tier_three:
         counter += 1
@@ -787,7 +787,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
         result_tier_one.append(100)
         result_tier_two.append(100)
         result_tier_three.append(deployment_three)
-        print(f"Down Only deployment = {100, 100, deployment_three}); Result: ", app)
+        print(f"Deployment", algorithm, " = {100, 100, deployment_three}); Result: ", app)
 
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('X-Axes')
