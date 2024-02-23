@@ -772,7 +772,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
     for deployment_two in deployments_tier_two:
         counter += 1
         x_axes.append(counter)
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 100))
+        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 100, algorithm))
         result_attacker_success_rate.append(app)
         result_tier_one.append(100)
         result_tier_two.append(deployment_two)
@@ -782,7 +782,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
     for deployment_three in deployments_tier_three:
         counter += 1
         x_axes.append(counter)
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 100], trials, 100))
+        app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 100], trials, 100, algorithm))
         result_attacker_success_rate.append(app)
         result_tier_one.append(100)
         result_tier_two.append(100)
