@@ -604,27 +604,27 @@ def perform_only_to_customer(route) -> bool:
     relation_to_sender = route.final.get_relation(route.first_hop)
 
     # Ingress policy 1:
-    # If a route with the OTC Attribute is received from a Customer or RS-client,
-    # then it is a route leak and MUST be dropped. The procedure halts.
+    # If a route with the OTC Attribute is received from a Customer or an RS-Client, then it is a route
+    # leak and be considered ineligible.
     if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
         print("Down Only validation detected Route Leak. Dropping Route.")
         return False
 
     # Ingress policy 2:
-    # If a route with the OTC Attribute is received from a Peer (non-transit) and
-    # the Attribute has a value that is not equal to the remote (i.e., Peer's) AS
-    # number, then it is a route leak and MUST be considered ineligible.
+    # If a route with the OTC Attribute is received from a Peer (i.e., remote AS with a Peer Role) and
+    # the Attribute has a value that is not equal to the remote (i.e., Peer's) AS number, then it is a
+    # route leak and be considered ineligible
     if do_set and relation_to_sender == Relation.PEER:
+        print("Peer case:")
         for i in route.local_data_part_do.split():
             if i != route.first_hop.as_id:
                 return False
 
     # Ingress policy 3:
-    # If a route is received from a Provider, a Peer, or an RS and the OTC Attribute
-    # is not present, then it MUST be added with a value equal to the AS number of
-    # the remote AS.
+    # If a route is received from a Provider, a Peer, or an RS and the OTC Attribute is not present,
+    # then it be added with a value equal to the AS number of the remote AS.
     if not do_set and (relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or
-                       relation_to_sender == Relation.RS_CLIENT):
+                       relation_to_sender == Relation.ROUTE_SERVER):
         route.local_data_part_do += str(route.final.as_id) + " "
 
     return True
@@ -691,9 +691,9 @@ class OnlyToCustomerPolicy(DefaultPolicy):
                 route.local_data_part_do += asn.as_id
 
             # egress policy 2
-            # If a route is sent to a Customer or Peer, then a DO Community MUST be added with
-            # value equal to the ASN of the sender
-            if relation == Relation.CUSTOMER or relation == Relation.PEER:
-                route.local_data_part_do += asn.as_id
+            # If a route already contains the OTC Attribute, it MUST NOT be propagated to Providers, Peers,
+            # or RSes.
+            if do_set and (relation == Relation.PROVIDER or relation == Relation.PEER or relation == Relation.ROUTE_SERVER):
+                return False
 
         return super_forward

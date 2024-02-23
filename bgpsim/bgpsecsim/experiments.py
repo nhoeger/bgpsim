@@ -980,6 +980,7 @@ def show_policies_by_specified_tier(graph, tier):
     route_leak_policy = 0
     aspa_policy = 0
     down_only_policy = 0
+    otc_policy = 0
     for asys in list:
         compare_to = graph.get_asys(asys).policy.name
         if compare_to == 'DefaultPolicy':
@@ -990,11 +991,13 @@ def show_policies_by_specified_tier(graph, tier):
             aspa_policy += 1
         elif compare_to == 'DownOnlyPolicy':
             down_only_policy += 1
+        elif compare_to == 'OnlyToCustomerPolicy':
+            otc_policy += 1
         else:
             raise Exception('ERROR: Unknown policy in play!')
 
     print("Tier", tmp_str, ": Default: " + str(default_policy) + "; RouteLeak: " + str(route_leak_policy) +
-          "; ASPA: " + str(aspa_policy) + "; DO: " + str(down_only_policy))
+          "; ASPA: " + str(aspa_policy) + "; DO: " + str(down_only_policy) + "; OTC: " + str(otc_policy))
 
 
 def show_aspa_objects(graph):
@@ -1031,7 +1034,6 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
         policy = OnlyToCustomerPolicy()
     else:
         warnings.warn("No valid algorithm parsed.")
-
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_three = deployment[2]
@@ -1184,6 +1186,7 @@ class FigureRouteLeakExperimentRandom(Experiment):
             create_ASPA_policies(graph, self.deployment_policy_list)
             create_ASPA_objects(graph, self.deployment_objects_list)
 
+        # show_policies_by_tier(graph)
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
         # starts to find a new routing table and executes the attack onto it by n hops
