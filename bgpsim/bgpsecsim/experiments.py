@@ -1186,7 +1186,7 @@ class FigureRouteLeakExperimentRandom(Experiment):
             create_ASPA_policies(graph, self.deployment_policy_list)
             create_ASPA_objects(graph, self.deployment_objects_list)
 
-        show_policies_by_tier(graph)
+        # show_policies_by_tier(graph)
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
         # starts to find a new routing table and executes the attack onto it by n hops
