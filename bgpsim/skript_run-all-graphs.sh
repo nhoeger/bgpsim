@@ -1,8 +1,8 @@
 #!/bin/bash
 # Random Deployment for Down Only and Only To Customer
 # [0,0,0] ... [100,0,0] ... [0,100,0] ... [100,100,0] ... [0,0,100] ... [100,0,100] ... [0,100,100] ... [100,100,100]
-pipenv run python -m bgpsecsim generate --trials 250 figure_one_down_only caida-data/20221101.as-rel.txt outputs/figure_one_down_only_100trials | tee down_only_one.txt
-pipenv run python -m bgpsecsim generate --trials 250 figure_one_only_to_customer caida-data/20221101.as-rel.txt outputs/figure_one_only_to_customer_100trials | tee otc_one.txt
+pipenv run python -m bgpsecsim generate --trials 250 figure_one_down_only caida-data/20221101.as-rel.txt outputs/figure_one_down_only_100trials | tee down_only_one250.txt
+pipenv run python -m bgpsecsim generate --trials 250 figure_one_only_to_customer caida-data/20221101.as-rel.txt outputs/figure_one_only_to_customer_100trials | tee otc_one250.txt
 
 # Random Deployment for Down Only and Only To Customer
 # [0,0,0] ... [100,0,0] ... [0,100,0]
