@@ -1049,7 +1049,7 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
 
 
 def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int], algorithm: str):
-    if len(deployment) != 2:
+    if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
     policy = DownOnlyPolicy()
     if algorithm == "DownOnly":
