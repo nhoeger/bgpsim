@@ -747,66 +747,22 @@ def figure_two_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int
 # Steps: 1 %
 def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
     trials = uniform_random_trials(nx_graph, n_trials)
-    # steps = 10
-    deployments_tier_one = np.arange(0, 101, 5)
-    deployments_tier_two = np.arange(0, 101, 5)
+    steps = 5
+    deployments_tier_one = np.arange(0, 101, steps)
+    deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, 50)
 
-    x_axes = []
-    counter = 0
-    result_tier_one = []
-    result_tier_two = []
-    result_tier_three = []
-    result_attacker_success_rate = []
-
     for deployment_one in deployments_tier_one:
-        counter += 1
-        x_axes.append(counter)
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
-        result_attacker_success_rate.append(app)
-        result_tier_one.append(deployment_one)
-        result_tier_two.append(0)
-        result_tier_three.append(0)
         print(f"Deployment = {deployment_one, 0, 0}); Result: ", app, "Algorithm: ", algorithm)
 
     for deployment_two in deployments_tier_two:
-        counter += 1
-        x_axes.append(counter)
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
-        result_attacker_success_rate.append(app)
-        result_tier_one.append(100)
-        result_tier_two.append(deployment_two)
-        result_tier_three.append(0)
         print(f"Deployment = {0, deployment_two, 0}); Result: ", app, "Algorithm: ", algorithm)
 
     for deployment_three in deployments_tier_three:
-        counter += 1
-        x_axes.append(counter)
         app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
-        result_attacker_success_rate.append(app)
-        result_tier_one.append(100)
-        result_tier_two.append(100)
-        result_tier_three.append(deployment_three)
         print(f"Deployment = {0, 0, deployment_three}); Result: ", app, "Algorithm: ", algorithm)
-
-    fig, ax1 = plt.subplots()
-    ax1.set_xlabel('X-Axes')
-    ax1.plot(x_axes, result_attacker_success_rate, label="Result Tier One", color='blue', linewidth=1.5)
-    ax1.set_ylabel('Y-Axes (0.0 to 5.0)', color='blue')
-    ax1.tick_params('y', colors='blue')
-    ax1.set_ylim(0, 5)
-
-    ax2 = ax1.twinx()
-    ax2.plot(x_axes, result_tier_one, label="Result Tier One", color='red')
-    ax2.plot(x_axes, result_tier_two, label="Result Tier Two", color='green')
-    ax2.plot(x_axes, result_tier_three, label="Result Tier Three", color='magenta')
-    ax2.set_ylim(0, 110)
-    ax2.tick_params('y', colors='red')
-
-    plt.legend()
-    plt.title('Increased deployment per tier.')
-    plt.show()
-    plt.savefig(filename)
 
 
 def figure_three_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
