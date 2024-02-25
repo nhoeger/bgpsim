@@ -710,7 +710,7 @@ def figure_roles_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm
                 result_tier_one.append(deployment_one)
                 result_tier_two.append(deployment_two)
                 result_tier_three.append(deployment_three)
-                print(deployment_one, deployment_two, deployment_three, 0, 0, app)
+                print(deployment_one, ", ", deployment_two, ", ", deployment_three, ", ", app)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -754,15 +754,15 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
 
     for deployment_one in deployments_tier_one:
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
-        print(deployment_one, 0, 0, app)
+        print(deployment_one, ", ", 0, ", ", 0, ", ", app)
 
     for deployment_two in deployments_tier_two:
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
-        print(0, deployment_two, 0, app)
+        print(0, ", ", deployment_two, ", ", 0, ", ", app)
 
     for deployment_three in deployments_tier_three:
         app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
-        print(0, 0, deployment_three, app)
+        print(0, ", ", 0, ", ", deployment_three, ", ", app)
 
 
 def figure_three_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
@@ -783,11 +783,11 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
 
     for deployment_one in deployments_tier_one:
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
-        print(deployment_one, 0, 0, app)
+        print(deployment_one, ", ", 0, ", ", 0, ", ", app)
 
     for deployment_two in deployments_tier_two:
         app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
-        print(0, deployment_two, 0, app)
+        print(0, ", ", deployment_two, ", ", 0, ", ", app)
 
 
 def figure_four_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
@@ -810,7 +810,7 @@ def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
         for deployment_one in deployments_tier_one:
             app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, deployment_one,
                                                                algorithm))
-            print(deployment_one, deployment_two, 0, app)
+            print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
 
 
 # Deploy ASPA and Down-Only at the same time
