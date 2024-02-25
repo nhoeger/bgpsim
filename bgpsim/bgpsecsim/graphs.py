@@ -772,22 +772,22 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
     for deployment_two in deployments_tier_two:
         counter += 1
         x_axes.append(counter)
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 100, algorithm))
+        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
         result_attacker_success_rate.append(app)
         result_tier_one.append(100)
         result_tier_two.append(deployment_two)
         result_tier_three.append(0)
-        print(f"Deployment = {100, deployment_two, 0}); Result: ", app, "Algorithm: ", algorithm)
+        print(f"Deployment = {0, deployment_two, 0}); Result: ", app, "Algorithm: ", algorithm)
 
     for deployment_three in deployments_tier_three:
         counter += 1
         x_axes.append(counter)
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 100], trials, 100, algorithm))
+        app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
         result_attacker_success_rate.append(app)
         result_tier_one.append(100)
         result_tier_two.append(100)
         result_tier_three.append(deployment_three)
-        print(f"Deployment = {100, 100, deployment_three}); Result: ", app, "Algorithm: ", algorithm)
+        print(f"Deployment = {0, 0, deployment_three}); Result: ", app, "Algorithm: ", algorithm)
 
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('X-Axes')
