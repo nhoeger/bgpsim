@@ -595,7 +595,7 @@ def perform_down_only(route) -> bool:
     # if not do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
     #    return True
 
-    return True
+    return False
 
 
 # RFC 9234
@@ -627,7 +627,7 @@ def perform_only_to_customer(route) -> bool:
                        relation_to_sender == Relation.ROUTE_SERVER):
         route.local_data_part_do += str(route.final.as_id) + " "
 
-    return True
+    return False
 
 
 class DownOnlyPolicy(DefaultPolicy):
