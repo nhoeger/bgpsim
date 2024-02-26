@@ -710,7 +710,7 @@ def figure_roles_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm
                 result_tier_one.append(deployment_one)
                 result_tier_two.append(deployment_two)
                 result_tier_three.append(deployment_three)
-                print(deployment_one, ", " + deployment_two, ", ", deployment_three, ", ", app)
+                print(deployment_one, ", ", deployment_two, ", ", deployment_three, ", ", app)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
