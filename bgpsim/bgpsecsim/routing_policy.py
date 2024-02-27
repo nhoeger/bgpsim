@@ -592,10 +592,7 @@ def perform_down_only(route) -> bool:
         else:
             route.local_data_part_do += str(route.final.as_id) + " "
 
-    # if not do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
-    #    return True
-
-    return False
+    return True
 
 
 # RFC 9234
@@ -627,7 +624,7 @@ def perform_only_to_customer(route) -> bool:
                        relation_to_sender == Relation.ROUTE_SERVER):
         route.local_data_part_do += str(route.final.as_id) + " "
 
-    return False
+    return True
 
 
 class DownOnlyPolicy(DefaultPolicy):
@@ -640,7 +637,11 @@ class DownOnlyPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_down_only(route)
-        return super_result and result
+        if super_result:
+            return result
+        else:
+            return False
+
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
         do_set = route.local_data_part_do != ""
@@ -659,8 +660,9 @@ class DownOnlyPolicy(DefaultPolicy):
             # MUST be added with value equal to the ASN of the sender.
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
                 route.local_data_part_do += asn.as_id
-
-        return super_forward
+                return True
+        else:
+            return False
 
 
 class OnlyToCustomerPolicy(DefaultPolicy):
@@ -673,7 +675,10 @@ class OnlyToCustomerPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_only_to_customer(route)
-        return super_result and result
+        if super_result:
+            return result
+        else:
+            return False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
         do_set = route.local_data_part_do != ""
