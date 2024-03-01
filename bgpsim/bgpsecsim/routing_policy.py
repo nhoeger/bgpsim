@@ -1,5 +1,6 @@
 from typing import Callable, Generator
 
+import random
 # from bgpsecsim.asys import Relation, Route, RoutingPolicy
 from bgpsecsim.asys import Relation, Route, RoutingPolicy
 
@@ -637,10 +638,7 @@ class DownOnlyPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_down_only(route)
-        if super_result:
-            return result
-        else:
-            return False
+        return result if super_result else False
 
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
@@ -660,9 +658,8 @@ class DownOnlyPolicy(DefaultPolicy):
             # MUST be added with value equal to the ASN of the sender.
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
                 route.local_data_part_do += asn.as_id
-                return True
-        else:
-            return False
+
+        return super_forward
 
 
 class OnlyToCustomerPolicy(DefaultPolicy):
@@ -675,10 +672,7 @@ class OnlyToCustomerPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_only_to_customer(route)
-        if super_result:
-            return result
-        else:
-            return False
+        return result if super_result else False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
         do_set = route.local_data_part_do != ""
