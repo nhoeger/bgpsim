@@ -809,8 +809,25 @@ def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
     for deployment_two in deployments_tier_two:
         for deployment_one in deployments_tier_one:
             app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, deployment_one,
-                                                               algorithm))
+                                                              algorithm))
             print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
+
+
+def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
+    result = []
+    print("Trials: ", n_trials)
+    for i in range(0, 1000):
+        if i % 100 == 0:
+            print("Trial number", i)
+        trials = uniform_random_trials(nx_graph, n_trials)
+        result.append(fmean(experiments.figure10_down_only_random(nx_graph, [15, 20], trials, 25, "OTC_ISP")))
+    std_deviation = np.std(result)
+    mean_value = np.mean(result)
+    variance = np.var(result)
+
+    print("Results: ", result)
+    print("Data: ", std_deviation, mean_value, variance)
+    print("#----------------------------------------------------------------------------#")
 
 
 # Deploy ASPA and Down-Only at the same time
@@ -840,7 +857,8 @@ def figure_down_only_4(filename: str, nx_graph: nx.Graph, n_trials: int):
                         for deployment_one_aspa in deployments_tier_one:
                             counter += 1
                             x_axes.append(counter)
-                            deployment = [deployment_one_down_only, deployment_two_down_only, deployment_three_down_only]
+                            deployment = [deployment_one_down_only, deployment_two_down_only,
+                                          deployment_three_down_only]
                             app = fmean(experiments.figure10_down_only_combined(nx_graph, deployment, trials))
                             result_attacker_success_rate.append(app)
                             result_tier_one_aspa.append(deployment_one_aspa)
@@ -875,6 +893,7 @@ def figure_down_only_4(filename: str, nx_graph: nx.Graph, n_trials: int):
     plt.title('Increased deployment per tier.')
     plt.show()
     plt.savefig(filename)
+
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure10(filename, nx_graph, n_trials, 100)

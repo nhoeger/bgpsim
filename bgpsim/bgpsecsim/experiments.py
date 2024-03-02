@@ -1156,7 +1156,8 @@ class FigureRouteLeakExperimentRandom(Experiment):
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
 
-        elif algorithm == 'DownOnly':
+
+        if algorithm == 'DownOnly':
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
