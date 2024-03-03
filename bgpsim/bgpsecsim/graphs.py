@@ -816,15 +816,18 @@ def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: 
 def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
     result = []
     print("Trials: ", n_trials)
-    for i in range(0, 1000):
-        if i % 100 == 0:
-            print("Trial number", i)
+    iterations = 1000
+    for i in range(iterations):
+        progress = i / iterations
+        progress_percent = int(progress * 100)
+        progress_bar = "[" + "=" * progress_percent + " " * (100 - progress_percent) + "]"
         trials = uniform_random_trials(nx_graph, n_trials)
         result.append(fmean(experiments.figure10_down_only_random(nx_graph, [15, 20], trials, 25, "OTC_ISP")))
+        print(f"\rProgress: {progress_bar} {progress_percent}%", end="", flush=True)
     std_deviation = np.std(result)
     mean_value = np.mean(result)
     variance = np.var(result)
-
+    print('\n')
     print("Results: ", result)
     print("Data: ", std_deviation, mean_value, variance)
     print("#----------------------------------------------------------------------------#")
