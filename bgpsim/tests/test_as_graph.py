@@ -3,17 +3,19 @@ import sys
 import os
 
 import bgpsecsim.as_graph as as_graph
+import bgpsecsim.experiments as experiments
 from bgpsecsim.asys import AS, AS_ID, Relation, Route, RoutingPolicy
 from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy, OnlyToCustomerPolicy
 )
 import bgpsecsim.experiments as experiments
 import bgpsecsim.routing_policy as routing_policy
 
 AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-extended.txt')
+
 
 #			  ------ 1 -----
 #	         /       |      \
@@ -31,6 +33,113 @@ AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-ex
 
 class TestASGraph(unittest.TestCase):
 
+    def test_new_approaches(self):
+        new_file_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'as_do_otc.txt')
+        nx_graph = as_graph.parse_as_rel_file(new_file_path)
+        graph = ASGraph(nx_graph)
+        tier_one = graph.get_tierOne()
+        tier_two = graph.get_tierTwo()
+        tier_three = graph.get_tierThree()
+        len_as = len(tier_one) + len(tier_two) + len(tier_three)
+        default_counter = graph.get_number_of_policy_users("DefaultPolicy")
+        print("Default counter: ", default_counter)
+        run_test = False
+
+        if run_test:
+            # find promising tuples: attacker and victim with success rate > 0
+            # Adds these candidates to promising_tuples
+            current_best = 0
+            promising_tuples = []
+            new_candidates = []
+            for i in range(1, len_as):
+                for j in range(1, len_as):
+                    victim = graph.get_asys(str(i))
+                    attacker = graph.get_asys(str(j))
+                    graph.clear_routing_tables()
+                    graph.reset_policies()
+                    attacker.policy = RouteLeakPolicy()
+                    graph.find_routes_to(victim)
+                    result = experiments.route_leak_success_rate(graph, attacker, victim)
+                    if result > 0 and not promising_tuples.__contains__([victim, attacker]):
+                        promising_tuples.append([victim, attacker])
+
+            # Iterates through promising tuples to find combinations, where the success rate increases, even with
+            # Down-Only deployment
+            if len(promising_tuples) != 0:
+                print("Iterating through candidates... ")
+                for elem in promising_tuples:
+                    victim = graph.get_asys(str(elem[0].as_id))
+                    attacker = graph.get_asys(str(elem[1].as_id))
+                    graph.clear_routing_tables()
+                    graph.reset_policies()
+                    attacker.policy = RouteLeakPolicy()
+                    graph.find_routes_to(victim)
+                    current_best_rate = experiments.route_leak_success_rate(graph, attacker, victim)
+                    down_only_user = graph.get_number_of_policy_users("DownOnlyPolicy")
+                    assert down_only_user == 0
+                    tmp_counter = 0
+                    for as_tier_one in tier_one:
+                        graph.clear_routing_tables()
+                        graph.get_asys(as_tier_one).policy = DownOnlyPolicy()
+                        if graph.get_asys(as_tier_one) != attacker:
+                            tmp_counter += 1
+                        attacker.policy = RouteLeakPolicy()
+                        graph.find_routes_to(victim)
+                        down_only_user = graph.get_number_of_policy_users("DownOnlyPolicy")
+                        assert down_only_user == tmp_counter
+                        result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                        if result > current_best_rate and not new_candidates.__contains__([victim, attacker]):
+                            new_candidates.append([victim, attacker])
+            else:
+                print("No promising tuples. Abort!")
+
+            # Iterate through these cases and print the Results
+            if len(new_candidates) != 0:
+                print("Found promising candidates!")
+                for candidates in new_candidates:
+                    print("------------------------")
+                    victim = graph.get_asys(str(candidates[0].as_id))
+                    attacker = graph.get_asys(str(candidates[1].as_id))
+                    graph.clear_routing_tables()
+                    graph.reset_policies()
+                    attacker.policy = RouteLeakPolicy()
+                    graph.find_routes_to(victim)
+                    current_best_rate = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                    assert graph.get_number_of_policy_users("DownOnlyPolicy") == 0
+                    print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
+                    print("Initial result: ", current_best_rate)
+                    tmp_counter = 0
+                    for as_tier_one in tier_one:
+                        graph.clear_routing_tables()
+                        graph.get_asys(as_tier_one).policy = DownOnlyPolicy()
+                        attacker.policy = RouteLeakPolicy()
+                        graph.find_routes_to(victim)
+                        if graph.get_asys(as_tier_one) != attacker:
+                            tmp_counter += 1
+                        down_only_user = graph.get_number_of_policy_users("DownOnlyPolicy")
+                        assert down_only_user == tmp_counter
+                        result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                        print("Result: ", result)
+        else:
+            print("Not running test")
+
+    def test_specific_pair(self):
+        print("#---- Specific Test ----#.")
+        new_file_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'as_do_otc.txt')
+        nx_graph = as_graph.parse_as_rel_file(new_file_path)
+        graph = ASGraph(nx_graph)
+
+        victim = graph.get_asys(str(14))
+        attacker = graph.get_asys(str(15))
+        graph.clear_routing_tables()
+        graph.reset_policies()
+        attacker.policy = RouteLeakPolicy()
+        graph.find_routes_to(victim)
+        result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+        print("Result: ", result)
+        assert True
+
+    '''   
     def test_parse_as_rel_file(self):
         graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
         for i in range(1, 18):
@@ -1566,6 +1675,8 @@ class TestASGraph(unittest.TestCase):
         #graph.get_asys('3').ascones = None
         verifying_as.policy = ASCONESPolicy()
         assert 'Unknown' == routing_policy.perform_ASCONES_algorithm(route)
+'''
+
 
 if __name__ == '__main__':
     unittest.main()

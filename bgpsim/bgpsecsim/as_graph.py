@@ -147,6 +147,15 @@ class ASGraph(object):
         return self.tierThree
 
 
+    def get_number_of_policy_users(self, input_policy: str):
+        counter = 0
+        for autonomous_system in self.asyss:
+            current = self.asyss[autonomous_system]
+            policy = str(current.policy)
+            if policy == input_policy:
+                counter += 1
+        return counter
+
     # ISP is no customer of any other AS
     def identify_top_isps(self, n: int) -> List[AS]:
         """Top ISPs by customer degree."""

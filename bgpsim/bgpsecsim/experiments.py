@@ -861,7 +861,7 @@ def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fractio
     # print('Total routes: ', n_total_routes)
     # print('----')
     # Fraction gives the first value as numerator and the second as denominator
-    # print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
+    print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
     return Fraction(n_bad_routes, n_total_routes) * 100
 
 
