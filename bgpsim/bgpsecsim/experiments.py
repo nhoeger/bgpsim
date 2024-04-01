@@ -268,6 +268,7 @@ def figureRouteLeak_experiment_random(
         graph: ASGraph,
         trials: List[Tuple[AS_ID, AS_ID]],
         deployment: [int, int, int],
+        aspa_deployment: [int, int, int],
         algorithm: str
 ) -> List[Fraction]:
     trial_queue: mp.Queue = mp.Queue()
@@ -275,7 +276,7 @@ def figureRouteLeak_experiment_random(
     # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
     # Make sure to reset policies and routing tables when reusing a worker!
     workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, [],
-                                               [],algorithm, deployment)
+                                               [], algorithm, deployment, aspa_deployment)
                for _ in range(PARALLELISM)]
     for worker in workers:
         worker.start()
@@ -296,6 +297,7 @@ def figureRouteLeak_experiment_random(
         worker.join()
 
     return results
+
 
 def figureRouteLeak_experiment_top_isps(
         graph: ASGraph,
@@ -578,7 +580,9 @@ def figure10_down_only_top_isp(
         tier_one: int
 ) -> List[Fraction]:
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
-    return figureRouteLeak_experiment_top_isps(graph, trials, [tier_one, deployment[1], deployment[0]], "DownOnlyTopISP")
+    return figureRouteLeak_experiment_top_isps(graph, trials, [tier_one, deployment[1], deployment[0]],
+                                               "DownOnlyTopISP")
+
 
 def figure10_down_only_combined(
         nx_graph: nx.Graph,
@@ -854,14 +858,14 @@ def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fractio
                 n_bad_routes += 1
                 # print(offending_asys.as_id, ", ", attacker.as_id)
                 # TODO: remove comment infront of if-statement
-                # if offending_asys.as_id != attacker.as_id:
-                # raise Exception("Attacker mismatches offending AS")
+                if offending_asys.as_id != attacker.as_id:
+                    raise Exception("Attacker mismatches offending AS")
                 # print("Attacker mismatches offending AS")
     # print('Bad routes: ', n_bad_routes)
     # print('Total routes: ', n_total_routes)
     # print('----')
     # Fraction gives the first value as numerator and the second as denominator
-    print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
+    # print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
     return Fraction(n_bad_routes, n_total_routes) * 100
 
 
@@ -1024,7 +1028,10 @@ def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
         # graph.get_asys(as_id).create_dummy_aspa()
 
 
-def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
+def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
+    # print("Deploying randomly. Deployment: ", deployment)
+    if aspa_input is None:
+        aspa_input = [0, 0, 0]
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
     policy = DownOnlyPolicy()
@@ -1032,6 +1039,11 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
         policy = DownOnlyPolicy()
     elif algorithm == "OTC":
         policy = OnlyToCustomerPolicy()
+    elif algorithm == "ASPA":
+        aspa_deployment_random(graph, aspa_input)
+        return
+    elif algorithm == "Combined":
+        aspa_deployment_random(graph, aspa_input)
     else:
         warnings.warn("No valid algorithm parsed.")
     tier_one = deployment[0]
@@ -1040,15 +1052,23 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str):
 
     for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
         graph.get_asys(as_id).policy = policy
+        if algorithm == "ASPA":
+            graph.get_asys(as_id).create_new_aspa(graph)
     if tier_two != 0:
         for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two)):
+            if algorithm == "ASPA":
+                graph.get_asys(as_id).create_new_aspa(graph)
             graph.get_asys(as_id).policy = policy
     if tier_three != 0:
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
+            if algorithm == "ASPA":
+                graph.get_asys(as_id).create_new_aspa(graph)
             graph.get_asys(as_id).policy = policy
+    # show_policies_by_tier(graph)
 
 
 def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int], algorithm: str):
+    print("Deploying top ISPs...")
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
     policy = DownOnlyPolicy()
@@ -1056,20 +1076,47 @@ def down_only_randomly_top_isp(graph: ASGraph, deployment: [int, int, int], algo
         policy = DownOnlyPolicy()
     elif algorithm == "OTC":
         policy = OnlyToCustomerPolicy()
+    elif algorithm == "ASPA":
+        policy = ASPAPolicy()
     else:
         warnings.warn("No valid algorithm parsed.")
     tier_one = deployment[0]
     tier_two = deployment[1]
     tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
-    tier_one_two_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
+    tier_two_top_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
 
     for as_object in tier_one_top_isp:
         as_number = as_object.as_id
         graph.get_asys(as_number).policy = policy
+        if algorithm == "ASPA":
+            graph.get_asys(as_number).create_new_aspa(graph)
     if tier_two != 0:
-        for as_object in tier_one_two_isp:
+        for as_object in tier_two_top_isp:
             as_number = as_object.as_id
             graph.get_asys(as_number).policy = policy
+        if algorithm == "ASPA":
+            graph.get_asys(as_number).create_new_aspa(graph)
+    # show_policies_by_tier(graph)
+
+
+def aspa_deployment_random(graph: ASGraph, deployment: [int, int, int]):
+    policy = ASPAPolicy()
+    tier_one = deployment[0]
+    tier_two = deployment[1]
+    tier_three = deployment[2]
+
+    if tier_one != 0:
+        for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
+            graph.get_asys(as_id).policy = policy
+            graph.get_asys(as_id).create_new_aspa(graph)
+    if tier_two != 0:
+        for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two)):
+            graph.get_asys(as_id).policy = policy
+            graph.get_asys(as_id).create_new_aspa(graph)
+    if tier_one != 0:
+        for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
+            graph.get_asys(as_id).policy = policy
+            graph.get_asys(as_id).create_new_aspa(graph)
 
 
 # create ASPA objects for all ASes according to deployment fraction
@@ -1124,10 +1171,10 @@ class FigureRouteLeakExperimentRandom(Experiment):
     graph: ASGraph
     deployment: List[int]
 
-    #def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: List[int],
+    # def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: List[int],
     #             algorithm: str, ):
     def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment_objects_list: List,
-                 deployment_policy_list: List, algorithm: str, deployment = None):
+                 deployment_policy_list: List, algorithm: str, deployment=None):
         super().__init__(input_queue, output_queue)
         self.graph = graph
         self.deployment_objects_list = deployment_objects_list
@@ -1156,7 +1203,6 @@ class FigureRouteLeakExperimentRandom(Experiment):
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
 
-
         if algorithm == 'DownOnly':
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
@@ -1183,9 +1229,13 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         elif algorithm == 'Combined':
             print("Combined approach")
+            do_otc_randomly(graph, self.deployment, algorithm, aspa_input)
+
+        elif algorithm == 'ASPA':
+            # print("Only ASPA deployed..")
             do_otc_randomly(graph, self.deployment, algorithm)
-            create_ASPA_policies(graph, self.deployment_policy_list)
-            create_ASPA_objects(graph, self.deployment_objects_list)
+            # create_ASPA_policies(graph, self.deployment_policy_list)
+            # create_ASPA_objects(graph, self.deployment_objects_list)
 
         # show_policies_by_tier(graph)
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes

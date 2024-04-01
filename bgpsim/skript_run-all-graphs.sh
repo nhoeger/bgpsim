@@ -22,5 +22,7 @@ pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_thre
 pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_four_down_only caida-data/20221101.as-rel.txt outputs/figure_four_down_only_"$number_of_trials"trials | tee down_only_four"$number_of_trials".txt
 pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_four_only_to_customer caida-data/20221101.as-rel.txt outputs/figure_four_only_to_customer_"$number_of_trials"trials | tee otc_four"$number_of_trials".txt
 
+#pipenv run python -m bgpsecsim generate --trials 1 figure_down_only_and_aspa caida-data/20221101.as-rel.txt outputs/figure_down_only_and_aspa_1_trials | tee down_only_and_aspa_1.txt
+
 
 

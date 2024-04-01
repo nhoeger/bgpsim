@@ -835,14 +835,26 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
 
 
 # Deploy ASPA and Down-Only at the same time
-def figure_down_only_4(filename: str, nx_graph: nx.Graph, n_trials: int):
-    print("Deploying ASPA and Down-Only...")
+def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int):
+    # print("Deploying ASPA and Down-Only...")
+    # print("Deploying ASPA trial...")
+
+    algorithm = 'Combined'
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 10
+    steps = 50
     deployments_tier_one = np.arange(0, 101, steps)
-    deployments_tier_two = np.arange(steps, 101, steps)
+    deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(steps, 101, steps)
 
+    for tier_two in deployments_tier_two:
+        for tier_one in deployments_tier_one:
+            for tier_two_aspa in deployments_tier_two:
+                for tier_three_aspa in deployments_tier_three:
+                    app = fmean(experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials, tier_one,
+                                algorithm, [0, tier_two_aspa, tier_three_aspa]))
+                    print("Redo print statement here!")
+                    # print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
+    '''
     x_axes = []
     counter = 0
     result_tier_one_down_only = []
@@ -897,6 +909,7 @@ def figure_down_only_4(filename: str, nx_graph: nx.Graph, n_trials: int):
     plt.title('Increased deployment per tier.')
     plt.show()
     plt.savefig(filename)
+    '''
 
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
