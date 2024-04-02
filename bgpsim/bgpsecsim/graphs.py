@@ -834,83 +834,30 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("#----------------------------------------------------------------------------#")
 
 
-# Deploy ASPA and Down-Only at the same time
-def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int):
-    # print("Deploying ASPA and Down-Only...")
-    # print("Deploying ASPA trial...")
+def figure_combined_random(filename: str, nx_graph: nx.Graph, n_trials: int):
+    figure_down_only_and_aspa(filename, nx_graph, n_trials, "Combined")
 
-    algorithm = 'Combined'
+
+
+def figure_combined_isp(filename: str, nx_graph: nx.Graph, n_trials: int):
+    figure_down_only_and_aspa(filename, nx_graph, n_trials, "Combined_ISP")
+
+# Deploy ASPA and Down-Only at the same time
+
+def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 50
+    steps = 25
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
-    deployments_tier_three = np.arange(steps, 101, steps)
+    deployments_tier_three = np.arange(0, 101, steps)
 
     for tier_two in deployments_tier_two:
         for tier_one in deployments_tier_one:
             for tier_two_aspa in deployments_tier_two:
                 for tier_three_aspa in deployments_tier_three:
                     app = fmean(experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials, tier_one,
-                                algorithm, [0, tier_two_aspa, tier_three_aspa]))
-                    print("Redo print statement here!")
-                    # print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
-    '''
-    x_axes = []
-    counter = 0
-    result_tier_one_down_only = []
-    result_tier_one_aspa = []
-    result_tier_two_down_only = []
-    result_tier_two_aspa = []
-    result_tier_three_down_only = []
-    result_tier_three_aspa = []
-    result_attacker_success_rate = []
-
-    for deployment_three_down_only in deployments_tier_three:
-        for deployment_three_aspa in deployments_tier_three:
-            for deployment_two_down_only in deployments_tier_three:
-                for deployment_two_aspa in deployments_tier_two:
-                    for deployment_one_down_only in deployments_tier_one:
-                        for deployment_one_aspa in deployments_tier_one:
-                            counter += 1
-                            x_axes.append(counter)
-                            deployment = [deployment_one_down_only, deployment_two_down_only,
-                                          deployment_three_down_only]
-                            app = fmean(experiments.figure10_down_only_combined(nx_graph, deployment, trials))
-                            result_attacker_success_rate.append(app)
-                            result_tier_one_aspa.append(deployment_one_aspa)
-                            result_tier_one_down_only.append(deployment_one_down_only)
-                            result_tier_two_aspa.append(deployment_two_aspa)
-                            result_tier_two_down_only.append(deployment_two_down_only)
-                            result_tier_three_aspa.append(deployment_three_aspa)
-                            result_tier_three_down_only.append(deployment_three_down_only)
-                            print(f"Down Only deployment = {deployment_one_aspa, deployment_one_down_only}"
-                                  f"{deployment_two_aspa, deployment_two_down_only}"
-                                  f"{deployment_three_aspa, deployment_three_down_only}); Result: ", app)
-
-    fig, ax1 = plt.subplots()
-    ax1.set_xlabel('X-Axes')
-    ax1.plot(x_axes, result_attacker_success_rate, label="Result Tier One", color='blue', linewidth=1.5)
-    ax1.set_ylabel('Y-Axes (0.0 to 5.0)', color='blue')
-    ax1.tick_params('y', colors='blue')
-    ax1.set_ylim(0, 5)
-
-    ax2 = ax1.twinx()
-    # TODO: Adjust color
-    ax2.plot(x_axes, result_tier_one_aspa, label="Deployment ASPA Tier One", color='red')
-    ax2.plot(x_axes, result_tier_one_down_only, label="Deployment DO Tier One", color='red')
-    ax2.plot(x_axes, result_tier_two_aspa, label="Deployment ASPA Tier Two", color='red')
-    ax2.plot(x_axes, result_tier_two_down_only, label="Deployment DO Tier Two", color='red')
-    ax2.plot(x_axes, result_tier_three_aspa, label="Deployment ASPA Tier Three", color='green')
-    ax2.plot(x_axes, result_tier_three_down_only, label="Deployment DO Tier Three", color='magenta')
-    ax2.set_ylim(0, 110)
-    ax2.tick_params('y', colors='red')
-
-    plt.legend()
-    plt.title('Increased deployment per tier.')
-    plt.show()
-    plt.savefig(filename)
-    '''
-
+                                algorithm, [0, tier_two_aspa, tier_three_aspa, 0, tier_two_aspa, tier_three_aspa]))
+                    print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ", app)
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure10(filename, nx_graph, n_trials, 100)
