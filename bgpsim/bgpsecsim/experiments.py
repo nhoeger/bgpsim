@@ -1118,10 +1118,12 @@ def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int
 
     if tier_one_policy != 0:
         for as_id in tier_one_top_isp_policy:
-            graph.get_asys(as_id).policy = policy
+            as_number = as_id.as_id
+            graph.get_asys(as_number).policy = policy
     if tier_two_policy != 0:
         for as_id in tier_two_top_isp_policy:
-            graph.get_asys(as_id).policy = policy
+            as_number = as_id.as_id
+            graph.get_asys(as_number).policy = policy
     if tier_three_policy != 0:
         limit = int(len(graph.get_tierThree()) / 100 * tier_three_policy)
         for i in range(0, limit):
@@ -1129,10 +1131,12 @@ def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int
             graph.get_asys(as_id).policy = policy
     if tier_one_object != 0:
         for as_id in tier_one_top_isp_object:
-            graph.get_asys(as_id).create_new_aspa(graph)
+            as_number = as_id.as_id
+            graph.get_asys(as_number).create_new_aspa(graph)
     if tier_two_object != 0:
         for as_id in tier_two_top_isp_object:
-            graph.get_asys(as_id).create_new_aspa(graph)
+            as_number = as_id.as_id
+            graph.get_asys(as_number).create_new_aspa(graph)
     if tier_three_object != 0:
         limit = int(len(graph.get_tierThree()) / 100 * tier_three_object)
         for i in range(0, limit):

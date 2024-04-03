@@ -43,7 +43,7 @@ class TestASGraph(unittest.TestCase):
         len_as = len(tier_one) + len(tier_two) + len(tier_three)
         default_counter = graph.get_number_of_policy_users("DefaultPolicy")
         print("Default counter: ", default_counter)
-        run_test = False
+        run_test = True
 
         if run_test:
             # find promising tuples: attacker and victim with success rate > 0
@@ -97,7 +97,8 @@ class TestASGraph(unittest.TestCase):
             if len(new_candidates) != 0:
                 print("Found promising candidates!")
                 for candidates in new_candidates:
-                    print("------------------------")
+                    # print("------------------------")
+                    promising_array = []
                     victim = graph.get_asys(str(candidates[0].as_id))
                     attacker = graph.get_asys(str(candidates[1].as_id))
                     graph.clear_routing_tables()
@@ -106,8 +107,9 @@ class TestASGraph(unittest.TestCase):
                     graph.find_routes_to(victim)
                     current_best_rate = float(experiments.route_leak_success_rate(graph, attacker, victim))
                     assert graph.get_number_of_policy_users("DownOnlyPolicy") == 0
-                    print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
-                    print("Initial result: ", current_best_rate)
+                    # print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
+                    # print("Result: ", current_best_rate)
+                    promising_array.append(current_best)
                     tmp_counter = 0
                     for as_tier_one in tier_one:
                         graph.clear_routing_tables()
@@ -119,7 +121,15 @@ class TestASGraph(unittest.TestCase):
                         down_only_user = graph.get_number_of_policy_users("DownOnlyPolicy")
                         assert down_only_user == tmp_counter
                         result = float(experiments.route_leak_success_rate(graph, attacker, victim))
-                        print("Result: ", result)
+                        # print("Result: ", result)
+                        promising_array.append(result)
+
+                    if len(promising_array) >= 3:
+                        if promising_array[1] < promising_array[2]:
+                            print("#-----------------------------------#"
+                                  "")
+                            print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
+                            print("Array: ", promising_array)
         else:
             print("Not running test")
 
