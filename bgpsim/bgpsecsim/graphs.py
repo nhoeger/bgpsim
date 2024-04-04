@@ -802,7 +802,7 @@ def figure_four_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: in
 def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
     print("Testing Figure 4")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 5
+    steps = 25
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
 
@@ -840,6 +840,7 @@ def figure_combined_random(filename: str, nx_graph: nx.Graph, n_trials: int):
 
 
 def figure_combined_isp(filename: str, nx_graph: nx.Graph, n_trials: int):
+    print("Starting..")
     figure_down_only_and_aspa(filename, nx_graph, n_trials, "Combined_ISP")
 
 # Deploy ASPA and Down-Only at the same time
@@ -858,8 +859,7 @@ def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int, 
                     temporary_data = experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials, tier_one,
                                 algorithm, [0, tier_two_aspa, tier_three_aspa, 0, tier_two_aspa, tier_three_aspa])
                     print("Temproary data: ", temporary_data)
-                    app = fmean(experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials, tier_one,
-                                algorithm, [0, tier_two_aspa, tier_three_aspa, 0, tier_two_aspa, tier_three_aspa]))
+                    app = fmean(temporary_data)
                     print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ", app)
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):

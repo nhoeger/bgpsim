@@ -136,6 +136,7 @@ class TestASGraph(unittest.TestCase):
 
     def test_specific_pair(self):
         print("#---- Specific Test ----#.")
+        current_switched_as = []
         new_file_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'as_do_otc.txt')
         nx_graph = as_graph.parse_as_rel_file(new_file_path)
         graph = ASGraph(nx_graph)
@@ -153,9 +154,11 @@ class TestASGraph(unittest.TestCase):
         for as_tier_one in tier_one:
             graph.clear_routing_tables()
             graph.get_asys(as_tier_one).policy = DownOnlyPolicy()
+            current_switched_as.append(as_tier_one)
             graph.find_routes_to(victim)
             result = float(experiments.route_leak_success_rate(graph, attacker, victim))
-            print(Fore.RED + "Result: ", result)
+            print("Down Only ASes: ", current_switched_as)
+            print(Fore.RED + "Result: ", result, Fore.WHITE)
 
         assert True
 
