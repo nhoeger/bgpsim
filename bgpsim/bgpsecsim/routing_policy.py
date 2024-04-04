@@ -657,7 +657,9 @@ class DownOnlyPolicy(DefaultPolicy):
             # If a route is sent to a Customer or Peer, then a DO Community
             # MUST be added with value equal to the ASN of the sender.
             if relation == Relation.CUSTOMER or relation == Relation.PEER:
-                route.local_data_part_do += asn.as_id
+                tmp_var = route.local_data_part_do.split()
+                if str(asn.as_id) not in tmp_var:
+                    route.local_data_part_do += asn.as_id
 
         return super_forward
 

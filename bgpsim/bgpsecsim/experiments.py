@@ -851,15 +851,18 @@ def leaked_route(route: ['Route']) -> AS:
 
 # This function returns a fraction of total vs. bad routes.
 def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fraction:
-    # print("Second attacker enum: ", attacker.as_id)
+    print("#-----------------------------------------#")
+    print("Enum: Attacker: ", attacker.as_id, "Victim: ", victim.as_id)
     n_bad_routes = 0
     n_total_routes = 0
     for asys in graph.asyss.values():
         route = asys.get_route(victim.as_id)
         if route:
+            print("Routes: ", route, "; DO: ", route.local_data_part_do)
             n_total_routes += 1
             offending_asys = leaked_route(route)
             if offending_asys:
+                # print("AS: ", asys.as_id, "Route: ", route)
                 n_bad_routes += 1
                 # print(offending_asys.as_id, ", ", attacker.as_id)
                 # TODO: remove comment infront of if-statement
@@ -870,8 +873,12 @@ def route_leak_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> Fractio
     # print('Total routes: ', n_total_routes)
     # print('----')
     # Fraction gives the first value as numerator and the second as denominator
-    # print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
-    return Fraction(n_bad_routes, n_total_routes) * 100
+    print('Bad routes: ' + str(n_bad_routes) + ' ; Total routes: ' + str(n_total_routes))
+    return_val = Fraction(n_bad_routes, n_total_routes) * 100
+    print("Returning:  ", return_val)
+    print("Recovering: ", return_val / 100)
+
+    return return_val
 
 
 class Experiment(mp.Process, abc.ABC):

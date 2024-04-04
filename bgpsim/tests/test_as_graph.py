@@ -13,6 +13,7 @@ from bgpsecsim.routing_policy import (
 )
 import bgpsecsim.experiments as experiments
 import bgpsecsim.routing_policy as routing_policy
+from colorama import Fore
 
 AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-extended.txt')
 
@@ -42,8 +43,7 @@ class TestASGraph(unittest.TestCase):
         tier_three = graph.get_tierThree()
         len_as = len(tier_one) + len(tier_two) + len(tier_three)
         default_counter = graph.get_number_of_policy_users("DefaultPolicy")
-        print("Default counter: ", default_counter)
-        run_test = True
+        run_test = False
 
         if run_test:
             # find promising tuples: attacker and victim with success rate > 0
@@ -109,7 +109,7 @@ class TestASGraph(unittest.TestCase):
                     assert graph.get_number_of_policy_users("DownOnlyPolicy") == 0
                     # print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
                     # print("Result: ", current_best_rate)
-                    promising_array.append(current_best)
+                    promising_array.append(current_best_rate)
                     tmp_counter = 0
                     for as_tier_one in tier_one:
                         graph.clear_routing_tables()
@@ -131,7 +131,8 @@ class TestASGraph(unittest.TestCase):
                             print("Attacker: ", str(candidates[1].as_id), "; Victim: ", str(candidates[0].as_id))
                             print("Array: ", promising_array)
         else:
-            print("Not running test")
+            print("Not running test. Good Pairs: [A: 15, V:14] or [A:12, V:7]")
+
 
     def test_specific_pair(self):
         print("#---- Specific Test ----#.")
@@ -147,7 +148,17 @@ class TestASGraph(unittest.TestCase):
         graph.find_routes_to(victim)
         result = float(experiments.route_leak_success_rate(graph, attacker, victim))
         print("Result: ", result)
+
+        tier_one = graph.get_tierOne()
+        for as_tier_one in tier_one:
+            graph.clear_routing_tables()
+            graph.get_asys(as_tier_one).policy = DownOnlyPolicy()
+            graph.find_routes_to(victim)
+            result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+            print(Fore.RED + "Result: ", result)
+
         assert True
+
 
     '''   
     def test_parse_as_rel_file(self):
