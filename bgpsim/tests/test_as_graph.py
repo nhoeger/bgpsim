@@ -15,8 +15,6 @@ from bgpsecsim.routing_policy import (
 )
 import bgpsecsim.experiments as experiments
 import bgpsecsim.routing_policy as routing_policy
-from colorama import Fore
-from tqdm import tqdm
 
 AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-extended.txt')
 
