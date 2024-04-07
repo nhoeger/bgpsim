@@ -991,6 +991,13 @@ def show_policies(graph):
           '\n ASPA: ' + str(aspa_policy) + '\n DO: ' + str(down_only_policy))
 
 
+def show_specified_policy(graph, policy_input) -> int:
+    counter = 0
+    for asys in graph.asyss:
+        if graph.get_asys(asys).policy.name == 'policy_input':
+            counter += 1
+    return counter
+
 def show_policies_by_tier(graph):
     for i in range(1, 4):
         show_policies_by_specified_tier(graph, i)

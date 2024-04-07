@@ -81,6 +81,8 @@ def compare_all_routes(first_route: [Route], second_route: [Route]):
 
 
 def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
+    print("Policy counter: ",experiments.show_specified_policy(graph, 'DownOnlyPolicy'))
+    # print("Attacker: ", attacker_as, "; Victim: ", victim_as)
     victim = graph.get_asys(victim_as)
     attacker = graph.get_asys(attacker_as)
     graph.clear_routing_tables()
@@ -94,21 +96,23 @@ def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
     tier_three = graph.get_tierThree()
     len_as = tier_one + tier_two + tier_three
     result_array = [initial_result]
-    switched_ases = []
+    switched_ases = ['0']
     printer = False
-    for attacker_as in len_as:
+    for ases in len_as:
         graph.clear_routing_tables()
-        switched_ases += attacker_as
-        graph.get_asys(attacker_as).policy = DownOnlyPolicy()
+        switched_ases += ases
+        graph.get_asys(ases).policy = DownOnlyPolicy()
         graph.find_routes_to(victim)
         result = float(experiments.new_success_rate(graph, attacker, victim))
         result_array.append(result)
         if result > initial_result:
             printer = True
-
+    # A: 18, V: 5; Increase detected
     if printer:
         print("+---------------------------------+")
+        experiments.show_policies(graph)
         print("Result: ", result_array)
+        print("Attacker: ", attacker_as, "; Victim: ", victim_as)
         print("ASes:   ", switched_ases)
         print("+---------------------------------+")
 
@@ -219,9 +223,10 @@ class TestASGraph(unittest.TestCase):
         tier_two = graph.get_tierTwo()
         tier_three = graph.get_tierThree()
         len_as = tier_one + tier_two + tier_three
+        # find_increase('18', '5', graph)
         for attacker_as in len_as:
-            for victim_as in len_as:
-                find_increase(attacker_as, victim_as, graph)
+             for victim_as in len_as:
+                 find_increase(attacker_as, victim_as, graph)
 
     #def test_specific_pair(self):
     #    print("#---- Specific Test ----#.")
