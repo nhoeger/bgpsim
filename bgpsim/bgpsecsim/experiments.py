@@ -972,6 +972,7 @@ def show_policies(graph):
     route_leak_policy = 0
     aspa_policy = 0
     down_only_policy = 0
+    only_to_customer = 0
     show_policies_by_tier(graph)
     for asys in graph.asyss:
         if graph.get_asys(asys).policy.name == 'DefaultPolicy':
@@ -982,8 +983,10 @@ def show_policies(graph):
             aspa_policy += 1
         elif graph.get_asys(asys).policy.name == 'DownOnlyPolicy':
             down_only_policy += 1
+        elif graph.get_asys(asys).policy.name == 'OnlyToCustomerPolicy':
+            only_to_customer += 1
         else:
-            raise Exception('ERROR: Unknown policy in play!')
+            raise Exception('ERROR: Unknown policy in play! Policy: ', graph.get_asys(asys).policy.name)
     print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) +
           '\n ASPA: ' + str(aspa_policy) + '\n DO: ' + str(down_only_policy))
 

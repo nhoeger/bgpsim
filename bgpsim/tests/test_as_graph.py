@@ -31,46 +31,140 @@ AS_REL_FILEPATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'as-rel-ex
 #    /                               \
 #   /                                 \
 #  17                                  18
-
+Route_Pair = tuple[Route, str]
 
 def check_trial(*args) -> bool:
-    last_elem = 0
     for elem_args in args:
         last_elem = elem_args[0]
         for elem in elem_args:
             if elem > last_elem:
-                print("#############################")
-                print("Last elem: ", last_elem, "/elem: ", elem)
-                print("Elem: ", args)
                 return True
             last_elem = elem
     return False
 
 
+def leaked_route(route: ['Route']) -> AS:
+    # Check for each AS except origin and destination in the path if Gao-Rexford was respected
+    for idasys, asys in enumerate(route.path):
+        if asys is not route.final and asys is not route.origin:
+            previous_asys = route.path[idasys - 1]
+            next_asys = route.path[idasys + 1]
+            # Peer sends route to other peer or upstream
+            if asys.get_relation(previous_asys) == Relation.PEER and (
+                    asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
+                return asys  # return offending AS
+            # Downstream sends route to other peer or upstream
+            elif asys.get_relation(previous_asys) == Relation.PROVIDER and (
+                    asys.get_relation(next_asys) == Relation.PEER or asys.get_relation(next_asys) == Relation.PROVIDER):
+                return asys  # return offending AS
+    return False
+
+
+def tmp_success(graph: ASGraph, attacker: AS, victim: AS):
+    return_routes = []
+    for asys in graph.asyss.values():
+        route = asys.get_route(victim.as_id)
+        if route:
+            offending_asys = leaked_route(route)
+            if offending_asys:
+                pair1: Route_Pair = (route, route.local_data_part_do)
+                return_routes.append(pair1)
+    return return_routes
+
+
+def compare_all_routes(first_route: [Route], second_route: [Route]):
+    unique_to_first = [route for route in first_route if route not in second_route]
+    unique_to_second = [route for route in second_route if route not in first_route]
+
+    differing_routes = unique_to_first + unique_to_second
+    return differing_routes
+
+
+def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
+    victim = graph.get_asys(victim_as)
+    attacker = graph.get_asys(attacker_as)
+    graph.clear_routing_tables()
+    graph.reset_policies()
+    attacker.policy = RouteLeakPolicy()
+    graph.find_routes_to(victim)
+    initial_result = experiments.new_success_rate(graph, attacker, victim)
+
+    tier_one = graph.get_tierOne()
+    tier_two = graph.get_tierTwo()
+    tier_three = graph.get_tierThree()
+    len_as = tier_one + tier_two + tier_three
+    result_array = [initial_result]
+    switched_ases = []
+    printer = False
+    for attacker_as in len_as:
+        graph.clear_routing_tables()
+        switched_ases += attacker_as
+        graph.get_asys(attacker_as).policy = DownOnlyPolicy()
+        graph.find_routes_to(victim)
+        result = float(experiments.new_success_rate(graph, attacker, victim))
+        result_array.append(result)
+        if result > initial_result:
+            printer = True
+
+    if printer:
+        print("+---------------------------------+")
+        print("Result: ", result_array)
+        print("ASes:   ", switched_ases)
+        print("+---------------------------------+")
+
+
 class TestASGraph(unittest.TestCase):
 
     def test_new_approaches(self):
-        nx_graph = as_graph.parse_as_rel_file('/home/nils/Routing/bgpsim/bgpsim/caida-data/20221101.as-rel.txt')
+        #nx_graph = as_graph.parse_as_rel_file('/home/nils/Routing/bgpsim/bgpsim/caida-data/20221101.as-rel.txt')
+        nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
         graph = ASGraph(nx_graph)
-        print("Loaded graph")
+        # print("Loaded graph")
         tier_one = graph.get_tierOne()
         tier_two = graph.get_tierTwo()
         tier_three = graph.get_tierThree()
         tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * 25))
         len_as = len(tier_one) + len(tier_two) + len(tier_three)
-        run_test = True
+        run_test = False
+        new_collection = False
+        down_only_as = []
+
         if run_test:
-            print("Running test")
+            victim = graph.get_asys('211076')
+            attacker = graph.get_asys('4775')
+            graph.clear_routing_tables()
+            graph.reset_policies()
+            attacker.policy = RouteLeakPolicy()
+            graph.find_routes_to(victim)
+            initial_result = experiments.new_success_rate(graph, attacker, victim)
+            print("Initial result: ", initial_result)
+            routes_saved = tmp_success(graph, attacker, victim)
+            graph.clear_routing_tables()
+            graph.get_asys('174').policy = OnlyToCustomerPolicy()
+            experiments.show_policies(graph)
+            graph.find_routes_to(victim)
+            other_routes = tmp_success(graph, attacker, victim)
+            result = float(experiments.new_success_rate(graph, attacker, victim))
+            print("Second result: ", result)
+            compare_all_routes(other_routes, routes_saved)
+
+        if new_collection:
             current_trial_results = []
             current_switched_as = []
             total_iterations = len_as * len_as
             progress = 0
             tier_one_progress = 0
-
             for i in range(1, len_as):
                 for j in range(1, len_as):
                     as_ids: List[AS_ID] = list(nx_graph.nodes)
                     [asn1, asn2] = random.sample(as_ids, 2)
+
+                    force_as = True
+                    if force_as:
+                        asn1 = '211076'
+                        asn2 = '4775'
+                        # First DO AS is: 174
+
                     progress += 1
                     percent_complete = (progress / total_iterations) * 100
                     print(f"Overall Progress: {percent_complete:.2f}%")
@@ -81,20 +175,34 @@ class TestASGraph(unittest.TestCase):
                     graph.reset_policies()
                     attacker.policy = RouteLeakPolicy()
                     graph.find_routes_to(victim)
-                    result = experiments.new_success_rate(graph, attacker, victim)
-                    current_trial_results.append(result)
+                    old_result = experiments.new_success_rate(graph, attacker, victim)
+                    print("Old result: ", old_result)
+                    current_trial_results.append(old_result)
+                    routes_saved = tmp_success(graph, attacker, victim)
                     for as_tier_one in tier_one_top_isp:
                         as_number = as_tier_one.as_id
+                        down_only_as.append(as_number)
                         tier_one_progress += 1
                         percent_complete_tier = (tier_one_progress / len(tier_one_top_isp)) * 100
-                        sys.stdout.write('\r' + f"Progress: {percent_complete_tier:.2f}%")
+                        sys.stdout.write('\r' + f"Tier 1 Progress: {percent_complete_tier:.2f}%")
                         sys.stdout.flush()
                         graph.clear_routing_tables()
                         graph.get_asys(as_number).policy = DownOnlyPolicy()
                         current_switched_as.append(as_number)
                         graph.find_routes_to(victim)
+                        other_routes = tmp_success(graph, attacker, victim)
                         result = float(experiments.new_success_rate(graph, attacker, victim))
+                        print('\n' + "Result: ", result, "; Down Only ASes: ", down_only_as)
+                        if result > old_result:
+                            print("First Route: ", other_routes[0])
+                            print("Relationship: ", graph.get_asys('1').get_relation(graph.get_asys('174')))
+                            print("Relationship 1 to 11537: ", graph.get_asys('1').get_relation(graph.get_asys('11537')))
+                            compare_all_routes(other_routes, routes_saved)
+                            break
+                        else:
+                            other_routes = routes_saved
                         current_trial_results.append(result)
+                        old_result = result
                     print(current_trial_results)
                     if check_trial(current_trial_results):
                         break
@@ -104,6 +212,16 @@ class TestASGraph(unittest.TestCase):
                 print("No promising tuples. Abort!")
 
 
+    def test_find_pair(self):
+        nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
+        graph = ASGraph(nx_graph)
+        tier_one = graph.get_tierOne()
+        tier_two = graph.get_tierTwo()
+        tier_three = graph.get_tierThree()
+        len_as = tier_one + tier_two + tier_three
+        for attacker_as in len_as:
+            for victim_as in len_as:
+                find_increase(attacker_as, victim_as, graph)
 
     #def test_specific_pair(self):
     #    print("#---- Specific Test ----#.")
