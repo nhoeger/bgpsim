@@ -896,7 +896,7 @@ def new_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> int:
                     raise Exception("Attacker mismatches offending AS")
             else:
                 print_string += "FALSE"
-            print(print_string)
+            #print(print_string)
     return n_bad_routes
 
 
