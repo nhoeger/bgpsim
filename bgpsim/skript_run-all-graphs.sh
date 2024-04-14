@@ -1,6 +1,6 @@
 #!/bin/bash
 # More trials provide more precise results, but increase running time linearly
-number_of_trials=20
+number_of_trials=500
 
 # Random Deployment for Down Only and Only To Customer
 # [0,0,0] ... [100,0,0] ... [0,100,0] ... [100,100,0] ... [0,0,100] ... [100,0,100] ... [0,100,100] ... [100,100,100]

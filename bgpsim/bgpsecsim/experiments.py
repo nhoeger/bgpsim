@@ -887,10 +887,16 @@ def new_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> int:
         route = asys.get_route(victim.as_id)
         if route:
             offending_asys = leaked_route(route)
+            print_string = str("Routes: " + str(route) + "; DO: " + str(route.local_data_part_do) + "; Bad Route: ")
             if offending_asys:
+                print_string += offending_asys.as_id
+                # print(offending_asys.as_id, ", ", attacker.as_id)
                 n_bad_routes += 1
                 if offending_asys.as_id != attacker.as_id:
                     raise Exception("Attacker mismatches offending AS")
+            else:
+                print_string += "FALSE"
+            print(print_string)
     return n_bad_routes
 
 

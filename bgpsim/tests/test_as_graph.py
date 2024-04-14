@@ -81,8 +81,6 @@ def compare_all_routes(first_route: [Route], second_route: [Route]):
 
 
 def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
-    print("Policy counter: ",experiments.show_specified_policy(graph, 'DownOnlyPolicy'))
-    # print("Attacker: ", attacker_as, "; Victim: ", victim_as)
     victim = graph.get_asys(victim_as)
     attacker = graph.get_asys(attacker_as)
     graph.clear_routing_tables()
@@ -100,7 +98,7 @@ def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
     printer = False
     for ases in len_as:
         graph.clear_routing_tables()
-        switched_ases += ases
+        switched_ases.append(ases)
         graph.get_asys(ases).policy = DownOnlyPolicy()
         graph.find_routes_to(victim)
         result = float(experiments.new_success_rate(graph, attacker, victim))
@@ -110,12 +108,38 @@ def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
     # A: 18, V: 5; Increase detected
     if printer:
         print("+---------------------------------+")
-        experiments.show_policies(graph)
+        #experiments.show_policies(graph)
         print("Result: ", result_array)
         print("Attacker: ", attacker_as, "; Victim: ", victim_as)
         print("ASes:   ", switched_ases)
         print("+---------------------------------+")
 
+
+def detailed_test(attacker_as: str, victim_as: str, graph: ASGraph):
+    victim = graph.get_asys(victim_as)
+    attacker = graph.get_asys(attacker_as)
+    graph.clear_routing_tables()
+    graph.reset_policies()
+    attacker.policy = RouteLeakPolicy()
+    graph.find_routes_to(victim)
+    initial_result = experiments.new_success_rate(graph, attacker, victim)
+    print("Initial Result: ", initial_result)
+    print("#------------------------------------------------------#")
+    graph.clear_routing_tables()
+    graph.reset_policies()
+    graph.get_asys('1').policy = DownOnlyPolicy()
+    attacker.policy = RouteLeakPolicy()
+    graph.find_routes_to(victim)
+    initial_result = experiments.new_success_rate(graph, attacker, victim)
+    print("Second Result: ", initial_result)
+    print("#------------------------------------------------------#")
+    graph.clear_routing_tables()
+    graph.reset_policies()
+    graph.get_asys('2').policy = DownOnlyPolicy()
+    attacker.policy = RouteLeakPolicy()
+    graph.find_routes_to(victim)
+    initial_result = experiments.new_success_rate(graph, attacker, victim)
+    print("Third Result: ", initial_result)
 
 class TestASGraph(unittest.TestCase):
 
@@ -223,10 +247,14 @@ class TestASGraph(unittest.TestCase):
         tier_two = graph.get_tierTwo()
         tier_three = graph.get_tierThree()
         len_as = tier_one + tier_two + tier_three
-        # find_increase('18', '5', graph)
-        for attacker_as in len_as:
-             for victim_as in len_as:
-                 find_increase(attacker_as, victim_as, graph)
+
+        # Good Pairs
+        # (6/ 17)
+        # find_increase('6', '17', graph)
+        detailed_test('6', '17', graph)
+        #for attacker_as in len_as:
+        #     for victim_as in len_as:
+        #         find_increase(attacker_as, victim_as, graph)
 
     #def test_specific_pair(self):
     #    print("#---- Specific Test ----#.")
