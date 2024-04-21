@@ -116,6 +116,7 @@ def find_increase(attacker_as: str, victim_as: str, graph: ASGraph):
 
 
 def detailed_test(attacker_as: str, victim_as: str, graph: ASGraph):
+    print("Attacker: ", attacker_as, "; Victim: ", victim_as)
     victim = graph.get_asys(victim_as)
     attacker = graph.get_asys(attacker_as)
     graph.clear_routing_tables()
@@ -135,11 +136,22 @@ def detailed_test(attacker_as: str, victim_as: str, graph: ASGraph):
     print("#------------------------------------------------------#")
     graph.clear_routing_tables()
     graph.reset_policies()
+    graph.get_asys('1').policy = DownOnlyPolicy()
     graph.get_asys('2').policy = DownOnlyPolicy()
     attacker.policy = RouteLeakPolicy()
     graph.find_routes_to(victim)
     initial_result = experiments.new_success_rate(graph, attacker, victim)
     print("Third Result: ", initial_result)
+    print("#------------------------------------------------------#")
+    graph.clear_routing_tables()
+    graph.reset_policies()
+    graph.get_asys('1').policy = DownOnlyPolicy()
+    graph.get_asys('2').policy = DownOnlyPolicy()
+    graph.get_asys('3').policy = DownOnlyPolicy()
+    attacker.policy = RouteLeakPolicy()
+    graph.find_routes_to(victim)
+    initial_result = experiments.new_success_rate(graph, attacker, victim)
+    print("Fourth Result: ", initial_result)
 
 class TestASGraph(unittest.TestCase):
 
@@ -248,10 +260,7 @@ class TestASGraph(unittest.TestCase):
         tier_three = graph.get_tierThree()
         len_as = tier_one + tier_two + tier_three
 
-        # Good Pairs
-        # (6/ 17)
-        # find_increase('6', '17', graph)
-        detailed_test('6', '17', graph)
+        detailed_test('14', '12', graph)
         #for attacker_as in len_as:
         #     for victim_as in len_as:
         #         find_increase(attacker_as, victim_as, graph)
