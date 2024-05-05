@@ -897,7 +897,7 @@ def new_success_rate(graph: ASGraph, attacker: AS, victim: AS) -> int:
                 print_string += "FALSE"
 
             # For debugging purpose: prints route + down only + bad route [False | Offending AS]
-            print(print_string)
+            # print(print_string)
 
     return n_bad_routes
 
