@@ -673,6 +673,15 @@ def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
     # eval.evaluate(data, filename, 10)
 
 
+def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
+    if len(result_one) != len(result_two):
+        return False
+    for i in range(0, len(result_one)):
+        if result_one[i] != result_two[i]:
+            return False
+    return True
+
+
 def figure_one_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure_roles_one(filename, nx_graph, n_trials, "DownOnly")
 
@@ -735,82 +744,99 @@ def figure_roles_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm
     plt.savefig(filename)
 
 
-def figure_two_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_2(filename, nx_graph, n_trials, "DownOnly")
-
-
-def figure_two_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_2(filename, nx_graph, n_trials, "OTC")
-
-
 # Increase deployment of down-only for each tier starting with tier one, finishing with tier three
 # Steps: 1 %
-def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
+def figure_two(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 5
+    results = []
+    steps = 100
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
-    deployments_tier_three = np.arange(0, 101, 50)
+    deployments_tier_three = np.arange(0, 101, steps)
+    algorithm = "OTC"
+    print("First algorithm: ", algorithm)
 
-    for deployment_one in deployments_tier_one:
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
-        print(deployment_one, ", ", 0, ", ", 0, ", ", app)
+    for iteration in range(0, 2):
+        for deployment_one in deployments_tier_one:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
+            results.append(app)
+            print(deployment_one, ", ", 0, ", ", 0, ", ", app)
 
-    for deployment_two in deployments_tier_two:
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
-        print(0, ", ", deployment_two, ", ", 0, ", ", app)
+        for deployment_two in deployments_tier_two:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
+            results.append(app)
+            print(0, ", ", deployment_two, ", ", 0, ", ", app)
 
-    for deployment_three in deployments_tier_three:
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
-        print(0, ", ", 0, ", ", deployment_three, ", ", app)
-
-
-def figure_three_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_3(filename, nx_graph, n_trials, "DownOnlyTopISP")
-
-
-def figure_three_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_3(filename, nx_graph, n_trials, "OTC_ISP")
+        for deployment_three in deployments_tier_three:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
+            results.append(app)
+            print(0, ", ", 0, ", ", deployment_three, ", ", app)
+        algorithm = "DownOnly"
+        print("Changing algorithm to: ", algorithm)
+    if compare_input_return_if_same(results[:len(results) // 2] , results[len(results) // 2:] ):
+        print("Results are equal")
+    else:
+        print("Difference detected. ")
 
 
 # Select top ISPs
-def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
+def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 3")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 10
+    steps = 100
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
+    deployments_tier_three = np.arange(0, 101, steps)
+    algorithm = "OTC_ISP"
+    results = []
 
-    for deployment_one in deployments_tier_one:
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
-        print(deployment_one, ", ", 0, ", ", 0, ", ", app)
+    for iteration in range(0, 2):
+        for deployment_one in deployments_tier_one:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, deployment_one, algorithm))
+            results.append(app)
+            print(deployment_one, ", ", 0, ", ", 0, ", ", app)
 
-    for deployment_two in deployments_tier_two:
-        app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
-        print(0, ", ", deployment_two, ", ", 0, ", ", app)
+        for deployment_two in deployments_tier_two:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, 0, algorithm))
+            results.append(app)
+            print(0, ", ", deployment_two, ", ", 0, ", ", app)
 
+        for deployment_three in deployments_tier_three:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, 0], trials, 0, algorithm))
+            results.append(app)
+            print(0, ", ", 0, ", ", deployment_three, ", ", app)
+        algorithm = "DownOnlyTopISP"
+        print("Changing algorithm to: ", algorithm)
 
-def figure_four_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_4(filename, nx_graph, n_trials, "DownOnlyTopISP")
-
-
-def figure_four_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_4(filename, nx_graph, n_trials, "OTC_ISP")
+    if compare_input_return_if_same(results[:len(results) // 2] , results[len(results) // 2:] ):
+        print("Results are equal")
+    else:
+        print("Difference detected. ")
 
 
 # Select top ISPs
-def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
+def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 4")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 10
+    steps = 100
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
-
-    for deployment_two in deployments_tier_two:
-        for deployment_one in deployments_tier_one:
-            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, deployment_two], trials, deployment_one,
-                                                              algorithm))
-            print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
+    deployments_tier_three = np.arange(0, 101, steps)
+    algorithm = "OTC_ISP"
+    results = []
+    for iteration in range(0, 2):
+        for deployment_three in deployments_tier_three:
+            for deployment_two in deployments_tier_two:
+                for deployment_one in deployments_tier_one:
+                    app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials, deployment_one,
+                                                                      algorithm))
+                    print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
+                    results.append(app)
+        algorithm = "DownOnlyTopISP"
+    if compare_input_return_if_same(results[:len(results) // 2] , results[len(results) // 2:] ):
+        print("Results are equal")
+    else:
+        print("Difference detected. ")
 
 
 def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):

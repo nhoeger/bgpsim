@@ -275,7 +275,6 @@ def figureRouteLeak_experiment_random(
     result_queue: mp.Queue = mp.Queue()
     # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
     # Make sure to reset policies and routing tables when reusing a worker!
-    print("Next steps....")
     workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, [],
                                                [], algorithm, deployment, aspa_deployment)
                for _ in range(PARALLELISM)]
@@ -574,7 +573,6 @@ def figure10_down_only_random(
         # 0-2 = policy, 3-5 = object
         aspa_deployment = [0, 0, 0, 0, 0, 0]
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
-    print("Entering experiments...")
     return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]],
                                              aspa_deployment, algorithm)
 
