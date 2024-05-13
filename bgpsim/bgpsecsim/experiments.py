@@ -275,6 +275,7 @@ def figureRouteLeak_experiment_random(
     result_queue: mp.Queue = mp.Queue()
     # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
     # Make sure to reset policies and routing tables when reusing a worker!
+    print("Next steps....")
     workers = [FigureRouteLeakExperimentRandom(trial_queue, result_queue, graph, [],
                                                [], algorithm, deployment, aspa_deployment)
                for _ in range(PARALLELISM)]
@@ -573,6 +574,7 @@ def figure10_down_only_random(
         # 0-2 = policy, 3-5 = object
         aspa_deployment = [0, 0, 0, 0, 0, 0]
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    print("Entering experiments...")
     return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]],
                                              aspa_deployment, algorithm)
 
@@ -1072,6 +1074,8 @@ def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
 
 
 def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
+    # print("Input deployment: ", deployment)
+    # print("ASPA input:       ", aspa_input)
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
     policy = DownOnlyPolicy()
@@ -1096,13 +1100,16 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
 
     if tier_one != 0:
         for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one)):
-            graph.get_asys(as_id).policy = policy
+            if graph.get_asys(as_id).policy != ASPAPolicy():
+                graph.get_asys(as_id).policy = policy
     if tier_two != 0:
         for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two)):
-            graph.get_asys(as_id).policy = policy
+            if graph.get_asys(as_id).policy != ASPAPolicy():
+                graph.get_asys(as_id).policy = policy
     if tier_three != 0:
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
-            graph.get_asys(as_id).policy = policy
+            if graph.get_asys(as_id).policy != ASPAPolicy():
+                graph.get_asys(as_id).policy = policy
 
 
 def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
@@ -1202,12 +1209,15 @@ def aspa_deployment_random(graph: ASGraph, deployment: [int, int, int, int, int,
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three_policy)):
             graph.get_asys(as_id).policy = policy
     if tier_one_object != 0:
+        print("Tier One Objects != 0")
         for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
     if tier_two_object != 0:
+        print("Tier Two Objects != 0")
         for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
     if tier_three_object != 0:
+        print("Tier Three Objects != 0")
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
 
@@ -1320,7 +1330,6 @@ class FigureRouteLeakExperimentRandom(Experiment):
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
             down_only_top_isp(graph, self.deployment, 'OTC', self.aspa_deployment)
-
         elif algorithm == 'Combined':
             do_otc_randomly(graph, self.deployment, algorithm, self.aspa_deployment)
         elif algorithm == 'Combined_ISP':

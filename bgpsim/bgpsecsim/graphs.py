@@ -844,6 +844,7 @@ def figure_combined_isp(filename: str, nx_graph: nx.Graph, n_trials: int):
 
 # Deploy ASPA and Down-Only at the same time
 def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
+    print("Running combined experiment.")
     trials = uniform_random_trials(nx_graph, n_trials)
     steps = 25
     deployments_tier_one = np.arange(0, 101, steps)
