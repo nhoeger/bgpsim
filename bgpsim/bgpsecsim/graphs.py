@@ -830,7 +830,7 @@ def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int):
                 for deployment_one in deployments_tier_one:
                     app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials, deployment_one,
                                                                       algorithm))
-                    print(deployment_one, ", ", deployment_two, ", ", 0, ", ", app)
+                    print(deployment_one, ", ", deployment_two, ", ", deployment_three, ", ", app)
                     results.append(app)
         algorithm = "DownOnlyTopISP"
     if compare_input_return_if_same(results[:len(results) // 2] , results[len(results) // 2:] ):
