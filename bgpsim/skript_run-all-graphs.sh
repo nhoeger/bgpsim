@@ -1,6 +1,6 @@
 #!/bin/bash
 # More trials provide more precise results, but increase running time linearly
-number_of_trials=1
+number_of_trials=100
 
 # Random Deployment for Down Only and Only To Customer
 # [0,0,0] ... [100,0,0] ... [0,100,0] ... [100,100,0] ... [0,0,100] ... [100,0,100] ... [0,100,100] ... [100,100,100]
@@ -14,7 +14,7 @@ number_of_trials=1
 
 # Top ISP Deployment
 # [0,0,0] ... [100,0,0] ... [0,100,0]
-pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_roles_3 caida-data/20221101.as-rel.txt outputs/figure_roles_3_"$number_of_trials"trials | tee figure_roles_3_"$number_of_trials".txt
+#pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_roles_3 caida-data/20221101.as-rel.txt outputs/figure_roles_3_"$number_of_trials"trials | tee figure_roles_3_"$number_of_trials".txt
 #pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_three_only_to_customer caida-data/20221101.as-rel.txt outputs/figure_three_only_to_customer_"$number_of_trials"trials | tee otc_three"$number_of_trials".txt
 
 # Top ISP Deployment
@@ -24,7 +24,9 @@ pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_role
 
 # Combined approach of ASPA and Down Only
 # Both random and top ISP
-#pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_combined_random caida-data/20221101.as-rel.txt outputs/figure_combined_random_"$number_of_trials"trials | tee combined_random_"$number_of_trials".txt
+pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_roles_5 caida-data/20221101.as-rel.txt outputs/figure_roles_5_"$number_of_trials"trials | tee figure_roles_5_"$number_of_trials".txt
+
+# Hopefully no longer needed:
 #pipenv run python -m bgpsecsim generate --trials "$number_of_trials" figure_combined_isp caida-data/20221101.as-rel.txt outputs/figure_combined_isp"$number_of_trials"trials | tee combined_isp"$number_of_trials".txt
 
 

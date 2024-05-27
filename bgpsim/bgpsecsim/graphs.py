@@ -860,30 +860,40 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("#----------------------------------------------------------------------------#")
 
 
-def figure_combined_random(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_down_only_and_aspa(filename, nx_graph, n_trials, "Combined")
-
-
-def figure_combined_isp(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_down_only_and_aspa(filename, nx_graph, n_trials, "Combined_ISP")
-
-
 # Deploy ASPA and Down-Only at the same time
-def figure_down_only_and_aspa(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
-    print("Running combined experiment.")
+def figure_roles_5(filename: str, nx_graph: nx.Graph, n_trials: int):
+    print("Testing Figure 5")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 25
+    steps = 5
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
-    for tier_two in deployments_tier_two:
-        for tier_one in deployments_tier_one:
-            for tier_two_aspa in deployments_tier_two:
-                for tier_three_aspa in deployments_tier_three:
-                    temporary_data = experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials, tier_one,
-                                algorithm, [0, tier_two_aspa, tier_three_aspa, 0, tier_two_aspa, tier_three_aspa])
-                    app = fmean(temporary_data)
-                    print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ", app)
+    algorithm = "Combined"
+    results = []
+
+    for iteration in range(0, 2):
+        for tier_two in deployments_tier_two:
+            for tier_one in deployments_tier_one:
+                for tier_two_aspa in deployments_tier_two:
+                    for tier_three_aspa in deployments_tier_three:
+                        temporary_data = experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials,
+                                                                               tier_one,
+                                                                               algorithm,
+                                                                               [0, tier_two_aspa, tier_three_aspa, 0,
+                                                                                tier_two_aspa, tier_three_aspa])
+                        app = fmean(temporary_data)
+                        results.append(app)
+                        print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ",
+                              app)
+
+        algorithm = "Combined_ISP"
+        print("Changing algorithm to: ", algorithm)
+
+    if compare_input_return_if_same(results[:len(results) // 2] , results[len(results) // 2:] ):
+        print("Results are equal")
+    else:
+        print("Difference detected. ")
+
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
     figure10(filename, nx_graph, n_trials, 100)

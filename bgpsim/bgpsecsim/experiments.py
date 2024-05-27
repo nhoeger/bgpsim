@@ -1207,15 +1207,12 @@ def aspa_deployment_random(graph: ASGraph, deployment: [int, int, int, int, int,
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three_policy)):
             graph.get_asys(as_id).policy = policy
     if tier_one_object != 0:
-        print("Tier One Objects != 0")
         for as_id in random.sample(graph.get_tierOne(), int(len(graph.get_tierOne()) / 100 * tier_one_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
     if tier_two_object != 0:
-        print("Tier Two Objects != 0")
         for as_id in random.sample(graph.get_tierTwo(), int(len(graph.get_tierTwo()) / 100 * tier_two_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
     if tier_three_object != 0:
-        print("Tier Three Objects != 0")
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three_object)):
             graph.get_asys(as_id).create_new_aspa(graph)
 
