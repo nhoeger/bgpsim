@@ -259,63 +259,78 @@ class TestASGraph(unittest.TestCase):
                 print("No promising tuples. Abort!")
 
 
-    #def test_find_pair(self):
-        #nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
-        #graph = ASGraph(nx_graph)
-        #tier_one = graph.get_tierOne()
-        #tier_two = graph.get_tierTwo()
-        #tier_three = graph.get_tierThree()
-        #len_as = tier_one + tier_two + tier_three
-
+    def test_find_pair(self):
+        print("Starting the test")
+        nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
+        graph = ASGraph(nx_graph)
+        victim = graph.get_asys('14')
+        attacker = graph.get_asys('12')
+        graph.clear_routing_tables()
+        graph.reset_policies()
+        attacker.policy = RouteLeakPolicy()
+        graph.find_routes_to(victim)
+        initial_result = experiments.new_success_rate(graph, attacker, victim)
+        print("Result: ", initial_result)
+        for asys in graph.asyss.values():
+            route = asys.get_route(victim.as_id)
+            if route:
+                print("Route: ", route.dest)
+        tier_one = graph.get_tierOne()
+        tier_two = graph.get_tierTwo()
+        tier_three = graph.get_tierThree()
+        len_as = tier_one + tier_two + tier_three
+        print("Length: ", len_as)
         #detailed_test('14', '12', graph)
 
 
     def test_compare_do_otc(self):
-        nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
-        graph = ASGraph(nx_graph)
-        tier_one = graph.get_tierOne()
-        tier_two = graph.get_tierTwo()
-        tier_three = graph.get_tierThree()
-        len_as = len(tier_one) + len(tier_two) + len(tier_three) + 1
-        all_as = tier_one + tier_two + tier_three
-        for attacker_as in range(1, len_as):
-            for victim_as in range(1, len_as):
-                results = []
-                victim = graph.get_asys(str(victim_as))
-                attacker = graph.get_asys(str(attacker_as))
-                graph.clear_routing_tables()
-                graph.reset_policies()
-                attacker.policy = RouteLeakPolicy()
-                graph.find_routes_to(victim)
-                initial_result = float(experiments.route_leak_success_rate(graph, attacker, victim))
-                results.append(initial_result)
-
-                for switching_as in all_as:
-                    graph.get_asys(str(switching_as)).policy = DownOnlyPolicy()
-                    attacker.policy = RouteLeakPolicy()
+        run_test = False
+        if run_test:
+            nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
+            graph = ASGraph(nx_graph)
+            tier_one = graph.get_tierOne()
+            tier_two = graph.get_tierTwo()
+            tier_three = graph.get_tierThree()
+            len_as = len(tier_one) + len(tier_two) + len(tier_three) + 1
+            all_as = tier_one + tier_two + tier_three
+            for attacker_as in range(1, len_as):
+                for victim_as in range(1, len_as):
+                    results = []
+                    victim = graph.get_asys(str(victim_as))
+                    attacker = graph.get_asys(str(attacker_as))
                     graph.clear_routing_tables()
-                    graph.find_routes_to(victim)
-                    result = float(experiments.route_leak_success_rate(graph, attacker, victim))
-                    results.append(result)
-
-                print_first = printable(results)
-                old_results = results
-                results = [initial_result]
-                graph.reset_policies()
-
-                for switching_as in all_as:
-                    graph.get_asys(str(switching_as)).policy = OnlyToCustomerPolicy()
+                    graph.reset_policies()
                     attacker.policy = RouteLeakPolicy()
-                    graph.clear_routing_tables()
                     graph.find_routes_to(victim)
-                    result = float(experiments.route_leak_success_rate(graph, attacker, victim))
-                    results.append(result)
+                    initial_result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                    results.append(initial_result)
+
+                    for switching_as in all_as:
+                        graph.get_asys(str(switching_as)).policy = DownOnlyPolicy()
+                        attacker.policy = RouteLeakPolicy()
+                        graph.clear_routing_tables()
+                        graph.find_routes_to(victim)
+                        result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                        results.append(result)
+
+                    print_first = printable(results)
+                    old_results = results
+                    results = [initial_result]
+                    graph.reset_policies()
+
+                    for switching_as in all_as:
+                        graph.get_asys(str(switching_as)).policy = OnlyToCustomerPolicy()
+                        attacker.policy = RouteLeakPolicy()
+                        graph.clear_routing_tables()
+                        graph.find_routes_to(victim)
+                        result = float(experiments.route_leak_success_rate(graph, attacker, victim))
+                        results.append(result)
 
 
-                if printable(results) or print_first and (old_results != result):
-                    print("DO:  ", old_results)
-                    print("OTC: ", results)
-                    print("+--------------------------------+")
+                    if printable(results) or print_first and (old_results != result):
+                        print("DO:  ", old_results)
+                        print("OTC: ", results)
+                        print("+--------------------------------+")
 
 
 

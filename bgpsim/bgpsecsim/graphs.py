@@ -682,71 +682,38 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
     return True
 
 
-def figure_one_down_only(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_one(filename, nx_graph, n_trials, "DownOnly")
-
-
-def figure_one_only_to_customer(filename: str, nx_graph: nx.Graph, n_trials: int):
-    figure_roles_one(filename, nx_graph, n_trials, "OTC")
-
-
 # Increase deployment of down-only for each tier starting with tier one, finishing with tier three
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
-def figure_roles_one(filename: str, nx_graph: nx.Graph, n_trials: int, algorithm: str):
+def figure_roles_1(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
-    start_time = time.time()
     deployments_tier_one = np.arange(0, 101, 5)
     deployments_tier_two = np.arange(0, 101, 5)
-    # Thesis: Tier three has no effect 
-    deployments_tier_three = np.arange(0, 101, 50)
+    deployments_tier_three = np.arange(0, 101, 5)
+    results = []
+    algorithm = "DownOnly"
+    print("First algorithm: ", algorithm)
 
-    x_axes = []
-    counter = 0
-    result_tier_one = []
-    result_tier_two = []
-    result_tier_three = []
-    result_attacker_success_rate = []
+    for iteration in range(0, 2):
+        for deployment_three in deployments_tier_three:
+            for deployment_two in deployments_tier_two:
+                for deployment_one in deployments_tier_one:
+                    app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials,
+                                                                      deployment_one, algorithm))
+                    results.append(app)
+                    print(deployment_one, ", ", deployment_two, ", ", deployment_three, ", ", app)
 
-    for deployment_three in deployments_tier_three:
-        for deployment_two in deployments_tier_two:
-            for deployment_one in deployments_tier_one:
-                counter += 1
-                x_axes.append(counter)
-                app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials,
-                                                                  deployment_one, algorithm))
-                result_attacker_success_rate.append(app)
-                result_tier_one.append(deployment_one)
-                result_tier_two.append(deployment_two)
-                result_tier_three.append(deployment_three)
-                print(deployment_one, ", ", deployment_two, ", ", deployment_three, ", ", app)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print("Elapsed time: ", elapsed_time)
-
-    fig, ax1 = plt.subplots()
-    ax1.set_xlabel('X-Axes')
-    ax1.plot(x_axes, result_attacker_success_rate, label="Result Tier One", color='blue', linewidth=1.5)
-    ax1.set_ylabel('Y-Axes (0.0 to 5.0)', color='blue')
-    ax1.tick_params('y', colors='blue')
-
-    ax2 = ax1.twinx()
-    ax2.plot(x_axes, result_tier_one, label="Result Tier One", color='red')
-    ax2.plot(x_axes, result_tier_two, label="Result Tier Two", color='green')
-    ax2.plot(x_axes, result_tier_three, label="Result Tier Three", color='magenta')
-    ax2.set_ylim(0, 100)
-    ax2.tick_params('y', colors='red')
-
-    plt.legend()
-    plt.title('Increased deployment per tier.')
-    plt.show()
-    plt.savefig(filename)
+        algorithm = "DownOnly"
+        print("Changing algorithm to: ", algorithm)
+    if compare_input_return_if_same(results[:len(results) // 2], results[len(results) // 2:]):
+        print("Results are equal")
+    else:
+        print("Difference detected. ")
 
 
 # Increase deployment of down-only for each tier starting with tier one, finishing with tier three
 # Steps: 1 %
-def figure_two(filename: str, nx_graph: nx.Graph, n_trials: int):
+def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int):
     trials = uniform_random_trials(nx_graph, n_trials)
     results = []
     steps = 100
