@@ -686,6 +686,7 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
 def figure_roles_1(filename: str, nx_graph: nx.Graph, n_trials: int):
+    print("Testing Figure 1")
     trials = uniform_random_trials(nx_graph, n_trials)
     deployments_tier_one = np.arange(0, 101, 10)
     deployments_tier_two = np.arange(0, 101, 10)
@@ -714,6 +715,7 @@ def figure_roles_1(filename: str, nx_graph: nx.Graph, n_trials: int):
 # Increase deployment of down-only for each tier starting with tier one, finishing with tier three
 # Steps: 1 %
 def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int):
+    print("Testing Figure 2")
     trials = uniform_random_trials(nx_graph, n_trials)
     results = []
     steps = 10
@@ -755,6 +757,7 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int):
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
     algorithm = "OTC_ISP"
+    print("First algorithm: ", algorithm)
     results = []
 
     for iteration in range(0, 2):
@@ -790,6 +793,7 @@ def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int):
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
     algorithm = "OTC_ISP"
+    print("First algorithm: ", algorithm)
     results = []
     for iteration in range(0, 2):
         for deployment_three in deployments_tier_three:
@@ -837,6 +841,7 @@ def figure_roles_5(filename: str, nx_graph: nx.Graph, n_trials: int):
     deployments_tier_three = np.arange(0, 101, steps)
     algorithm = "Combined"
     results = []
+    print("First algorithm: ", algorithm)
 
     for iteration in range(0, 2):
         for tier_two in deployments_tier_two:
