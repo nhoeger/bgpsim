@@ -11,6 +11,7 @@ class DefaultPolicy(RoutingPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         # not in combination with return, inverts the value
         return not route.contains_cycle()
@@ -63,6 +64,7 @@ class RPKIPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         return super().accept_route(route) and not route.origin_invalid
 
@@ -73,6 +75,7 @@ class PathEndValidationPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         return super().accept_route(route) and not route.path_end_invalid
 
@@ -83,6 +86,7 @@ class BGPsecHighSecPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
@@ -111,6 +115,7 @@ class BGPsecMedSecPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
@@ -137,6 +142,7 @@ class BGPsecLowSecPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         # Rule should actually be to reject unauthenticated routes if all ASs on it have
         # bgp_sec_enabled, but that is less convenient in our simulation.
@@ -164,6 +170,7 @@ class RouteLeakPolicy(RoutingPolicy):
 
     def __str__(self):
         return self.name
+
     def accept_route(self, route: Route) -> bool:
         # not in combination with return, inverts the value
         return not route.contains_cycle()
@@ -526,13 +533,13 @@ def perform_ASCONES_algorithm(route):
     return result
 
 
-
 class ASPAPolicy(DefaultPolicy):
     def __init__(self):
         self.name = 'ASPAPolicy'
 
     def __str__(self):
         return self.name
+
     # https://datatracker.ietf.org/doc/html/draft-ietf-sidrops-aspa-verification-16
     def accept_route(self, route: Route) -> bool:
         result = perform_ASPA_algorithm(route)
@@ -547,6 +554,7 @@ class ASCONESPolicy(DefaultPolicy):
 
     def __str__(self):
         return self.name
+
     # https://datatracker.ietf.org/doc/html/draft-ietf-sidrops-aspa-verification-16
     def accept_route(self, route: Route) -> bool:
         result = perform_ASCONES_algorithm(route)
@@ -557,13 +565,14 @@ class ASCONESPolicy(DefaultPolicy):
 
 def perform_down_only(route) -> bool:
     do_set = route.local_data_part_do != ""
-    relation_to_sender = route.final.get_relation(route.first_hop)
+    remote_as = route.path[len(route.path) - 2]
+    relation_to_sender = remote_as.get_relation(route.final)
 
     # Ingress policy 1:
     # If a route with DO Community is received from a Customer or RS-client,
     # then it is a route leak and MUST be dropped. The procedure halts.
     if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
-        print("Down Only validation detected Route Leak. Dropping Route.")
+        #print("Down Only validation detected Route Leak. Dropping Route.")
         return False
 
     # Ingress policy 2:
@@ -571,41 +580,32 @@ def perform_down_only(route) -> bool:
     # at least one DO value is not equal to the sending neighbor's ASN, then
     # it is a route leak and MUST be dropped. The procedure halts.
     if do_set and relation_to_sender == Relation.PEER:
-        print("[Relation]: CUSTOMER; [Down_Only]: True ;[Atr]: ", route.local_data_part_do, "; [Length]: ",
-              len(route.local_data_part_do), "; [PreviousASN]: ", route.final.as_id)
+        #print("[Relation]: CUSTOMER; [Down_Only]: True ;[Atr]: ", route.local_data_part_do, "; [Length]: ",
+        #      len(route.local_data_part_do), "; [PreviousASN]: ", route.final.as_id)
         for i in route.local_data_part_do.split():
             if i != route.first_hop.as_id:
-                print("Reason 2")
+                #print("Reason 2")
                 return False
 
     # Ingress policy 3:
     # If a route is received from a Provider, Peer, or RS, then a DO
     # Community MUST be added with a value equal to the sending neighbor's ASN.
     if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or relation_to_sender == Relation.RS_CLIENT:
-        down_only_split = route.local_data_part_do.split()
-        last_as = down_only_split[-1] if down_only_split else None
-        if do_set:
-            print("Down Only Split: ", down_only_split, "; ", route.local_data_part_do)
-            if last_as is not None:
-                if last_as != route.final.as_id:
-                    print("Last AS: ", last_as, "; current AS: ", route.final.as_id)
-                    route.local_data_part_do += str(route.final.as_id) + " "
-        else:
-            route.local_data_part_do += str(route.final.as_id) + " "
-
+        route.local_data_part_do += str(remote_as.as_id) + " "
     return True
 
 
 # RFC 9234
 def perform_only_to_customer(route) -> bool:
     do_set = route.local_data_part_do != ""
-    relation_to_sender = route.final.get_relation(route.first_hop)
+    remote_as = route.path[len(route.path) - 2]
+    relation_to_sender = remote_as.get_relation(route.final)
 
     # Ingress policy 1:
     # If a route with the OTC Attribute is received from a Customer or an RS-Client, then it is a route
     # leak and be considered ineligible.
     if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
-        print("Down Only validation detected Route Leak. Dropping Route.")
+        # print("Down Only validation detected Route Leak. Dropping Route.")
         return False
 
     # Ingress policy 2:
@@ -613,9 +613,8 @@ def perform_only_to_customer(route) -> bool:
     # the Attribute has a value that is not equal to the remote (i.e., Peer's) AS number, then it is a
     # route leak and be considered ineligible
     if do_set and relation_to_sender == Relation.PEER:
-        print("Peer case:")
         for i in route.local_data_part_do.split():
-            if i != route.first_hop.as_id:
+            if i != remote_as.as_id:
                 return False
 
     # Ingress policy 3:
@@ -623,45 +622,9 @@ def perform_only_to_customer(route) -> bool:
     # then it be added with a value equal to the AS number of the remote AS.
     if not do_set and (relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or
                        relation_to_sender == Relation.ROUTE_SERVER):
-        route.local_data_part_do += str(route.final.as_id) + " "
+        route.local_data_part_do += str(remote_as.as_id) + " "
 
     return True
-
-
-class DownOnlyPolicy(DefaultPolicy):
-    def __init__(self):
-        self.name = 'DownOnlyPolicy'
-
-    def __str__(self):
-        return self.name
-
-    def accept_route(self, route: Route) -> bool:
-        super_result = DefaultPolicy().accept_route(route)
-        result = perform_down_only(route)
-        return result if super_result else False
-
-
-    def forward_to(self, route: Route, relation: Relation) -> bool:
-        do_set = route.local_data_part_do != ""
-        super_forward = DefaultPolicy().forward_to(route, relation)
-        asn = route.final
-
-        if super_forward:
-            # egress policy 1
-            # A route with DO Community MUST NOT be sent to a Provider, Peer or RS.
-            if do_set and (relation == Relation.PEER or relation == Relation.PROVIDER or relation == Relation.ROUTE_SERVER):
-                # print("Forwarding returned False: Route was sent from PEER/PROVIDER and has Down_Only Attribute.")
-                return False
-
-            # egress policy 2
-            # If a route is sent to a Customer or Peer, then a DO Community
-            # MUST be added with value equal to the ASN of the sender.
-            if relation == Relation.CUSTOMER or relation == Relation.PEER:
-                tmp_var = route.local_data_part_do.split()
-                if str(asn.as_id) not in tmp_var:
-                    route.local_data_part_do += asn.as_id
-
-        return super_forward
 
 
 class OnlyToCustomerPolicy(DefaultPolicy):
@@ -674,6 +637,9 @@ class OnlyToCustomerPolicy(DefaultPolicy):
     def accept_route(self, route: Route) -> bool:
         super_result = DefaultPolicy().accept_route(route)
         result = perform_only_to_customer(route)
+        result_alt = perform_down_only(route)
+        if result != result_alt:
+            print("IMPLEMENTATION ERROR!")
         return result if super_result else False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
@@ -694,7 +660,8 @@ class OnlyToCustomerPolicy(DefaultPolicy):
             # egress policy 2
             # If a route already contains the OTC Attribute, it MUST NOT be propagated to Providers, Peers,
             # or RSes.
-            if do_set and (relation == Relation.PROVIDER or relation == Relation.PEER or relation == Relation.ROUTE_SERVER):
+            if do_set and (
+                    relation == Relation.PROVIDER or relation == Relation.PEER or relation == Relation.ROUTE_SERVER):
                 return False
 
         return super_forward

@@ -6,7 +6,7 @@ import pickle
 
 import bgpsecsim.error as error
 from bgpsecsim.asys import AS, AS_ID, Relation, Route, RoutingPolicy
-from bgpsecsim.routing_policy import DefaultPolicy, RouteLeakPolicy, DownOnlyPolicy
+from bgpsecsim.routing_policy import DefaultPolicy, RouteLeakPolicy
 
 
 def parse_as_rel_file_CAIDA(filename: str) -> nx.Graph:

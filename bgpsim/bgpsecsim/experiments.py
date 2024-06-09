@@ -14,7 +14,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy, OnlyToCustomerPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, OnlyToCustomerPolicy
 )
 
 PARALLELISM = 250
@@ -1076,9 +1076,6 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
     # print("ASPA input:       ", aspa_input)
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
-    policy = DownOnlyPolicy()
-    if algorithm == "DownOnly":
-        policy = DownOnlyPolicy()
     elif algorithm == "OTC":
         policy = OnlyToCustomerPolicy()
     elif algorithm == "ASPA":
@@ -1090,6 +1087,7 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
         if aspa_input is None:
             raise Exception("No ASPA deployment parsed for combined deployment!")
         aspa_deployment_random(graph, aspa_input)
+        policy = OnlyToCustomerPolicy()
     else:
         warnings.warn("No valid algorithm parsed.")
     tier_one = deployment[0]
@@ -1113,9 +1111,6 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
 def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
     if len(deployment) != 3:
         warnings.warn("Parsed deployment does not match required format.")
-    policy = DownOnlyPolicy()
-    if algorithm == "DownOnly":
-        policy = DownOnlyPolicy()
     elif algorithm == "OTC":
         policy = OnlyToCustomerPolicy()
     elif algorithm == "ASPA":
@@ -1127,21 +1122,30 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
         if aspa_input is None:
             raise Exception("No ASPA deployment parsed for combined deployment!")
         aspa_deployment_top_isp(graph, aspa_input)
+        policy = OnlyToCustomerPolicy()
     else:
         warnings.warn("No valid algorithm parsed.")
+
     tier_one = deployment[0]
     tier_two = deployment[1]
+    tier_three = deployment[2]
     tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
     tier_two_top_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
-
     if tier_one != 0:
         for as_object in tier_one_top_isp:
             as_number = as_object.as_id
-            graph.get_asys(as_number).policy = policy
+            if graph.get_asys(as_number).policy != ASPAPolicy():
+                graph.get_asys(as_number).policy = policy
     if tier_two != 0:
         for as_object in tier_two_top_isp:
             as_number = as_object.as_id
-            graph.get_asys(as_number).policy = policy
+            if graph.get_asys(as_number).policy != ASPAPolicy():
+                graph.get_asys(as_number).policy = policy
+    if tier_three != 0:
+        limit = int(len(graph.get_tierThree()) / 100 * tier_three)
+        for i in range(0, limit):
+            as_id = graph.get_tierThree()[i]
+            graph.get_asys(as_id).policy = policy
 
 
 def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int, int]):
@@ -1302,35 +1306,27 @@ class FigureRouteLeakExperimentRandom(Experiment):
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
 
-        if algorithm == 'DownOnly':
-            if self.deployment is None:
-                warnings.warn(f"No deployment parsed!")
-                return Fraction(0, 1)
-            do_otc_randomly(graph, self.deployment, algorithm)
-
         elif algorithm == 'OTC':
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
             do_otc_randomly(graph, self.deployment, algorithm)
 
-        elif algorithm == 'DownOnlyTopISP':
-            if self.deployment is None:
-                warnings.warn(f"No deployment parsed!")
-                return Fraction(0, 1)
-            down_only_top_isp(graph, self.deployment, 'DownOnly', self.aspa_deployment)
-
         elif algorithm == 'OTC_ISP':
             if self.deployment is None:
                 warnings.warn(f"No deployment parsed!")
                 return Fraction(0, 1)
             down_only_top_isp(graph, self.deployment, 'OTC', self.aspa_deployment)
+
         elif algorithm == 'Combined':
             do_otc_randomly(graph, self.deployment, algorithm, self.aspa_deployment)
+
         elif algorithm == 'Combined_ISP':
             down_only_top_isp(graph, self.deployment, 'Combined', self.aspa_deployment)
+
         elif algorithm == 'ASPA':
             do_otc_randomly(graph, self.aspa_deployment, algorithm)
+
         elif algorithm == 'ASPA_ISP':
             down_only_top_isp(graph, self.deployment, 'ASPA', self.aspa_deployment)
 
