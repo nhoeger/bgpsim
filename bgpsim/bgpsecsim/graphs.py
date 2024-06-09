@@ -691,7 +691,7 @@ def figure_roles_1(filename: str, nx_graph: nx.Graph, n_trials: int):
     deployments_tier_two = np.arange(0, 101, 10)
     deployments_tier_three = np.arange(0, 101, 10)
     results = []
-    algorithm = "DownOnly"
+    algorithm = "OTC"
     print("First algorithm: ", algorithm)
 
     for iteration in range(0, 2):
