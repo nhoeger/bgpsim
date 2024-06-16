@@ -688,7 +688,7 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 def figure_roles_1(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 1")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 50
+    steps = 5
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -710,7 +710,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 2")
     trials = uniform_random_trials(nx_graph, n_trials)
     results = []
-    steps = 50
+    steps = 5
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -736,7 +736,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, n_trials: int):
 def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 3")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 50
+    steps = 5
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -763,7 +763,7 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, n_trials: int):
 def figure_roles_4(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 4")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 50
+    steps = 5
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -804,7 +804,7 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
 def figure_roles_5(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 5")
     trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 50
+    steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
