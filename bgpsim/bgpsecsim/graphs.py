@@ -686,12 +686,20 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
+
+    print("Testing Figure 2")
     write_results("figure_roles_1_" + str(n_trials), figure_roles_1(filename, nx_graph, trials))
+
+    print("Testing Figure 2")
     write_results("figure_roles_2_" + str(n_trials), figure_roles_2(filename, nx_graph, trials))
+
+    print("Testing Figure 3")
     write_results("figure_roles_3_" + str(n_trials), figure_roles_3(filename, nx_graph, trials))
+
     print("Completed all test cases.")
 
 
+# Save evaluation results into dedicated text files
 def write_results(file_name: str, input_string: str):
     with open(file_name + '.txt', 'w') as file:
         file.write(input_string)
@@ -701,8 +709,7 @@ def write_results(file_name: str, input_string: str):
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
 def figure_roles_1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    print("Testing Figure 1")
-    steps = 50
+    steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -716,13 +723,14 @@ def figure_roles_1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
                                                                   deployment_one, algorithm))
                 return_string += (str(deployment_one) + ", " + str(deployment_two) + ", " + str(deployment_three) + ", "
                                   + str(app)) + '\n'
+                # print("Return string: ", return_string)
+    # print("Finally returning: " + '\n'+ '\n'+ '\n' + return_string)
     return return_string
 
 
 # Select top ISPs
 def figure_roles_2(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    print("Testing Figure 2")
-    steps = 5
+    steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -741,14 +749,13 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
 
 # Deploy ASPA and Down-Only at the same time
 def figure_roles_3(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    print("Testing Figure 3")
-    steps = 10
+    steps = 25
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
     algorithm = "Combined"
     return_string = "Figure 3" + '\n'
-    return_string += "First algorithm: ", algorithm
+    return_string += "First algorithm: " + algorithm + '\n'
 
     for iteration in range(0, 2):
         for tier_two in deployments_tier_two:
@@ -763,11 +770,12 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
                         app = fmean(temporary_data)
                         return_string += (str(tier_one) + ", " + str(tier_two) + ", 0, 0, " + str(
                             tier_two_aspa) + ", " + str(tier_three_aspa) + str(app)) + '\n'
-                        #print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ",
-                        #      app)
+                        # print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], ";
+                        # Result: ", app)
 
         algorithm = "Combined_ISP"
-        return_string += "Changing algorithm to: " + algorithm
+        return_string += "Changing algorithm to: " + algorithm + '\n'
+
     return return_string
 
 
@@ -790,37 +798,6 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Results: ", result)
     print("Data: ", std_deviation, mean_value, variance)
     print("#----------------------------------------------------------------------------#")
-
-
-# Deploy ASPA and Down-Only at the same time
-def figure_roles_5(filename: str, nx_graph: nx.Graph, n_trials: int):
-    print("Testing Figure 5")
-    trials = uniform_random_trials(nx_graph, n_trials)
-    steps = 10
-    deployments_tier_one = np.arange(0, 101, steps)
-    deployments_tier_two = np.arange(0, 101, steps)
-    deployments_tier_three = np.arange(0, 101, steps)
-    algorithm = "Combined"
-    results = []
-    print("First algorithm: ", algorithm)
-
-    for iteration in range(0, 2):
-        for tier_two in deployments_tier_two:
-            for tier_one in deployments_tier_one:
-                for tier_two_aspa in deployments_tier_two:
-                    for tier_three_aspa in deployments_tier_three:
-                        temporary_data = experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials,
-                                                                               tier_one,
-                                                                               algorithm,
-                                                                               [0, tier_two_aspa, tier_three_aspa, 0,
-                                                                                tier_two_aspa, tier_three_aspa])
-                        app = fmean(temporary_data)
-                        results.append(app)
-                        print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], "; Result: ",
-                              app)
-
-        algorithm = "Combined_ISP"
-        print("Changing algorithm to: ", algorithm)
 
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
