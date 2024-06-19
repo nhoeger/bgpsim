@@ -687,16 +687,28 @@ def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
 
-    print("Testing Figure 2")
-    write_results("figure_roles_1_" + str(n_trials), figure_roles_1(filename, nx_graph, trials))
+    print("Testing Figure 1")
+    output_to_parse = figure_roles_1(nx_graph, trials)
+    write_results("figure_roles_1_" + str(n_trials), output_to_parse)
 
     print("Testing Figure 2")
-    write_results("figure_roles_2_" + str(n_trials), figure_roles_2(filename, nx_graph, trials))
+    output_to_parse = figure_roles_2(nx_graph, trials)
+    write_results("figure_roles_2_" + str(n_trials), output_to_parse)
 
     print("Testing Figure 3")
-    write_results("figure_roles_3_" + str(n_trials), figure_roles_3(filename, nx_graph, trials))
+    output_to_parse = figure_roles_3(nx_graph, trials)
+    write_results("figure_roles_3_" + str(n_trials), output_to_parse)
 
     print("Completed all test cases.")
+    deviation_test = False
+    if deviation_test:
+        result_array = []
+        values = [250, 500, 1000, 10000]
+        for i in values:
+            result_array.append(deviation_figure(nx_graph, i))
+        print("ResultArray: ", result_array)
+        create_deviation_figure(result_array)
+
 
 
 # Save evaluation results into dedicated text files
@@ -708,7 +720,7 @@ def write_results(file_name: str, input_string: str):
 # Increase deployment of otc for each tier starting with tier one, finishing with tier three
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
-def figure_roles_1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+def figure_roles_1(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
@@ -729,7 +741,7 @@ def figure_roles_1(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
 
 
 # Select top ISPs
-def figure_roles_2(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+def figure_roles_2(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
@@ -748,7 +760,7 @@ def figure_roles_2(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
 
 
 # Deploy ASPA and Down-Only at the same time
-def figure_roles_3(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     steps = 25
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
@@ -770,8 +782,6 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
                         app = fmean(temporary_data)
                         return_string += (str(tier_one) + ", " + str(tier_two) + ", 0, 0, " + str(
                             tier_two_aspa) + ", " + str(tier_three_aspa) + str(app)) + '\n'
-                        # print("Deployment: ", [tier_one, tier_two, 0, 0, tier_two_aspa, tier_three_aspa], ";
-                        # Result: ", app)
 
         algorithm = "Combined_ISP"
         return_string += "Changing algorithm to: " + algorithm + '\n'
@@ -779,7 +789,7 @@ def figure_roles_3(filename: str, nx_graph: nx.Graph, trials: List[Tuple[AS_ID, 
     return return_string
 
 
-def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
+def deviation_figure(nx_graph: nx.Graph, n_trials: int) -> list[float]:
     result = []
     print("Trials: ", n_trials)
     iterations = 1000
@@ -790,14 +800,74 @@ def deviation_figure(filename: str, nx_graph: nx.Graph, n_trials: int):
         trials = uniform_random_trials(nx_graph, n_trials)
         current = fmean(experiments.figure10_down_only_random(nx_graph, [15, 20], trials, 25, "OTC_ISP"))
         result.append(current)
-        print(f"\rProgress: {progress_bar} {progress_percent}% | Current_Result: {current}", end="", flush=True)
+        print(f"\rProgress: {progress_bar} {progress_percent}%", end="", flush=True)
     std_deviation = np.std(result)
     mean_value = np.mean(result)
     variance = np.var(result)
+    minimum = np.min(result)
+    maximum = np.max(result)
+
     print('\n')
-    print("Results: ", result)
-    print("Data: ", std_deviation, mean_value, variance)
+    print("Deviation: ", std_deviation, " || Mean: ", mean_value, " || Variance: ", variance)
+    print("Minimum: ", minimum, " || Maximum: ", maximum)
     print("#----------------------------------------------------------------------------#")
+    return result
+
+
+def create_deviation_figure(overall_results: list[list[float]]):
+    print("Starting to create figure: ")
+    print("overall: ", overall_results[0])
+    print("Len: ", len(overall_results))
+    data = [overall_results[0], overall_results[1], overall_results[2], overall_results[3]]
+    fig, ax = plt.subplots(figsize=(5, 9))
+    bp = ax.boxplot(data, patch_artist=True, notch='True', vert=1, widths=0.8)
+    colors = ['#0000FF', '#00FF00', '#FFFF00']
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+
+    # changing color and linewidth of
+    # whiskers
+    for whisker in bp['whiskers']:
+        whisker.set(color='#8B008B',
+                    linewidth=1.5,
+                    linestyle=":")
+
+    # changing color and linewidth of
+    # caps
+    for cap in bp['caps']:
+        cap.set(color='#8B008B',
+                linewidth=2)
+
+    # changing color and linewidth of
+    # medians
+    for median in bp['medians']:
+        median.set(color='red',
+                   linewidth=3)
+
+    # changing style of fliers
+    for flier in bp['fliers']:
+        flier.set(marker='D',
+                  color='#e7298a',
+                  alpha=0.5)
+
+    # Adding title
+    ax.set_title("Mean and standard deviation \n for different number of trials")
+    ax.set_ylabel('Route leak success rate [%]')
+    plt.xlabel("Number of trials")
+
+    # Removing top axes and right axes
+    # ticks
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+
+    plt.xticks([1, 2, 3, 4], ['10', '100', '1.000', '10.000'])
+    maximum = np.max(overall_results[0])
+    print("maximum:")
+    fig.subplots_adjust(hspace=0.1)
+    plt.ylim(0, maximum + 10)
+
+    # show plot
+    plt.show()
 
 
 def figure10_100(filename: str, nx_graph: nx.Graph, n_trials: int):
