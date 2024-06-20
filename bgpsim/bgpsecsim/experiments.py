@@ -1104,7 +1104,6 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
             if graph.get_asys(as_id).policy != ASPAPolicy():
                 graph.get_asys(as_id).policy = policy
-    graph.pol
 
 
 def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
