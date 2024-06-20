@@ -1145,7 +1145,7 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
         for i in range(0, limit):
             as_id = graph.get_tierThree()[i]
             graph.get_asys(as_id).policy = policy
-    show_policies(graph)
+    # show_policies(graph)
 
 
 def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int, int]):

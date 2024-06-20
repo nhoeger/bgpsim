@@ -687,9 +687,9 @@ def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
     # print("Initializing with following trials: ", trials)
-    # print("Testing Figure 1")
-    # output_to_parse = figure_roles_1(nx_graph, trials)
-    # write_results("figure_roles_1_" + str(n_trials), output_to_parse)
+    print("Testing Figure 1")
+    output_to_parse = figure_roles_1(nx_graph, trials)
+    write_results("figure_roles_1_" + str(n_trials), output_to_parse)
 
     print("Testing Figure 2")
     output_to_parse = figure_roles_2(nx_graph, trials)
@@ -720,13 +720,12 @@ def write_results(file_name: str, input_string: str):
 # For each tier iteration, the previous tier(s) gets redeployed as well
 # Steps: 1 %
 def figure_roles_1(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    steps = 100
+    steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
     algorithm = "OTC"
     return_string = "Figure 1" + '\n'
-    print("Figure 1 using trials: " ,trials)
     for deployment_three in deployments_tier_three:
         for deployment_two in deployments_tier_two:
             for deployment_one in deployments_tier_one:
@@ -734,14 +733,12 @@ def figure_roles_1(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
                                                                   deployment_one, algorithm))
                 return_string += (str(deployment_one) + ", " + str(deployment_two) + ", " + str(deployment_three) + ", "
                                   + str(app)) + '\n'
-                # print("Return string: ", return_string)
-    # print("Finally returning: " + '\n'+ '\n'+ '\n' + return_string)
     return return_string
 
 
 # Select top ISPs
 def figure_roles_2(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    steps = 50
+    steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
@@ -755,7 +752,6 @@ def figure_roles_2(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
                                                                   algorithm))
                 return_string += (str(deployment_one) + ", " + str(deployment_two) + ", " + str(deployment_three) + ", "
                                   + str(app)) + '\n'
-                print("Result: ", app)
     return return_string
 
 
