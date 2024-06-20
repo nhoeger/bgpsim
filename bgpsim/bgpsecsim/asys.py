@@ -2,7 +2,6 @@ import abc
 import string
 from enum import Enum
 from typing import Dict, List, Optional
-#from bgpsecsim.routing_policy import DownOnlyPolicy
 
 AS_ID = int
 
@@ -126,42 +125,61 @@ class AS(object):
         if route.dest == self.as_id:
             return []
 
+        # print("RouteDO 1: ", route.local_data_part_do)
         if not self.policy.accept_route(route):
             return []
-
+        # print("RouteDO 2: ", route.local_data_part_do)
         # Only update route if new route is preferred over existing route
         if (route.dest in self.routing_table and
                 not self.policy.prefer_route(self.routing_table[route.dest], route)):
             return []
 
         self.routing_table[route.dest] = route
-
         # Propagate route to neighbors according to policy
-        forward_to_relations = set((relation
-                                    for relation in Relation
-                                    if self.policy.forward_to(route, relation)))
 
+        local_data_part = route.local_data_part_do
+        forward_to_relations = set()
+        for relation in Relation:
+            if self.policy.forward_to(route, relation):
+                forward_to_relations.add(relation)
+            route.local_data_part_do = local_data_part
+
+        #forward_to_relations = set((relation
+        #                            for relation in Relation
+        #                            if self.policy.forward_to(route, relation)))
+
+        #for neighbor, relation in self.neighbors.items():
+        #    print("neighbors: ", neighbor.as_id, "Relationship: ", relation, relation in forward_to_relations)
         return [neighbor
                 for neighbor, relation in self.neighbors.items()
                 if relation in forward_to_relations]
 
     def originate_route(self, next_hop: 'AS') -> 'Route':
-        return Route(
+        route_to_return = Route(
             dest=self.as_id,
             path=[self, next_hop],
             origin_invalid=False,
             path_end_invalid=False,
             authenticated=self.bgp_sec_enabled,
+            local_data_part_do="",
         )
+        if str(self.policy) == "OnlyToCustomerPolicy":
+            relation_to_sender = self.get_relation(next_hop)
+            self.policy.forward_to(route_to_return, relation_to_sender, True)
+        return route_to_return
 
     def forward_route(self, route: 'Route', next_hop: 'AS') -> 'Route':
+        if str(self.policy) == "OnlyToCustomerPolicy":
+            relation_to_sender = route.final.get_relation(next_hop)
+            current_as = route.final
+            current_as.policy.forward_to(route, relation_to_sender)
         return Route(
             dest=route.dest,
             path=route.path + [next_hop],
             origin_invalid=route.origin_invalid,
             path_end_invalid=route.path_end_invalid,
             authenticated=route.authenticated and next_hop.bgp_sec_enabled,
-            local_data_part_do="",
+            local_data_part_do=route.local_data_part_do,
         )
 
     def reset_routing_table(self) -> None:

@@ -8,7 +8,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, DownOnlyPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy
 )
 import bgpsecsim.experiments as experiments
 import bgpsecsim.routing_policy as routing_policy

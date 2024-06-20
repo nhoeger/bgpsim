@@ -36,6 +36,9 @@ class DefaultPolicy(RoutingPolicy):
         return False
 
     def forward_to(self, route: Route, relation: Relation) -> bool:
+        # print("Route: ", route)
+        # print("Current AS: ", route.final.as_id)
+        # print("Received from: ", route.first_hop.as_id)
         asys = route.final
         first_hop_rel = asys.get_relation(route.first_hop)
         assert first_hop_rel is not None
@@ -563,43 +566,16 @@ class ASCONESPolicy(DefaultPolicy):
         return super().accept_route(route) and not (result == 'Invalid')
 
 
-def perform_down_only(route) -> bool:
-    do_set = route.local_data_part_do != ""
-    remote_as = route.path[len(route.path) - 2]
-    relation_to_sender = remote_as.get_relation(route.final)
-
-    # Ingress policy 1:
-    # If a route with DO Community is received from a Customer or RS-client,
-    # then it is a route leak and MUST be dropped. The procedure halts.
-    if do_set and (relation_to_sender == Relation.CUSTOMER or relation_to_sender == Relation.RS_CLIENT):
-        #print("Down Only validation detected Route Leak. Dropping Route.")
-        return False
-
-    # Ingress policy 2:
-    # If a route with DO Community is received from a Peer (non-transit) and
-    # at least one DO value is not equal to the sending neighbor's ASN, then
-    # it is a route leak and MUST be dropped. The procedure halts.
-    if do_set and relation_to_sender == Relation.PEER:
-        #print("[Relation]: CUSTOMER; [Down_Only]: True ;[Atr]: ", route.local_data_part_do, "; [Length]: ",
-        #      len(route.local_data_part_do), "; [PreviousASN]: ", route.final.as_id)
-        for i in route.local_data_part_do.split():
-            if i != route.first_hop.as_id:
-                #print("Reason 2")
-                return False
-
-    # Ingress policy 3:
-    # If a route is received from a Provider, Peer, or RS, then a DO
-    # Community MUST be added with a value equal to the sending neighbor's ASN.
-    if relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or relation_to_sender == Relation.RS_CLIENT:
-        route.local_data_part_do += str(remote_as.as_id) + " "
-    return True
-
-
 # RFC 9234
 def perform_only_to_customer(route) -> bool:
     do_set = route.local_data_part_do != ""
     remote_as = route.path[len(route.path) - 2]
-    relation_to_sender = remote_as.get_relation(route.final)
+    relation_to_sender = route.final.get_relation(remote_as)
+
+    # print("Route: ", route)
+    # print("Current AS: ", route.final.as_id)
+    # print("Remote: ", remote_as.as_id)
+    # print("Relation to sender: ", relation_to_sender)
 
     # Ingress policy 1:
     # If a route with the OTC Attribute is received from a Customer or an RS-Client, then it is a route
@@ -622,7 +598,7 @@ def perform_only_to_customer(route) -> bool:
     # then it be added with a value equal to the AS number of the remote AS.
     if not do_set and (relation_to_sender == Relation.PROVIDER or relation_to_sender == Relation.PEER or
                        relation_to_sender == Relation.ROUTE_SERVER):
-        route.local_data_part_do += str(remote_as.as_id) + " "
+        route.local_data_part_do += str(remote_as.as_id)
 
     return True
 
@@ -635,18 +611,25 @@ class OnlyToCustomerPolicy(DefaultPolicy):
         return self.name
 
     def accept_route(self, route: Route) -> bool:
+        #print("Accepting Route? ", route, "DO: ", route.local_data_part_do)
         super_result = DefaultPolicy().accept_route(route)
         result = perform_only_to_customer(route)
-        result_alt = perform_down_only(route)
-        if result != result_alt:
-            print("IMPLEMENTATION ERROR!")
+        #if result and super_result:
+            #print("Accepting Route!! ", route, "DO: ", route.local_data_part_do)
         return result if super_result else False
 
-    def forward_to(self, route: Route, relation: Relation) -> bool:
+    def forward_to(self, route: Route, relation: Relation, originating=False) -> bool:
+        # print("Policy Forwarding:")
         do_set = route.local_data_part_do != ""
         super_forward = DefaultPolicy().forward_to(route, relation)
-        asn = route.final
-
+        # print("Route: ", route, "; Super Forward: ", super_forward)
+        if originating:
+            asn = route.path[-2]
+            # print("ASN: ", asn.as_id)
+        else:
+            asn = route.final
+        # print("Route: ", route, "Local Data Part: ", route.local_data_part_do, "SuperForward? ", super_forward, "relation: ", relation)
+        # print(route, "relation: ", relation, "DO: ", route.local_data_part_do, ", DoSet? ", do_set)
         if super_forward:
             # egress policy 1
             # If a route is to be advertised to a Customer, a Peer, or an RS-Client (when the
@@ -655,13 +638,19 @@ class OnlyToCustomerPolicy(DefaultPolicy):
             # local AS.
             if not do_set and (relation == Relation.CUSTOMER or relation == Relation.PEER or
                                relation == Relation.RS_CLIENT):
+                # print("Adding")
                 route.local_data_part_do += asn.as_id
+                # print("Local Data part is now: ", route.local_data_part_do)
+                #print("Returning True ; First")
+                return super_forward
 
             # egress policy 2
             # If a route already contains the OTC Attribute, it MUST NOT be propagated to Providers, Peers,
             # or RSes.
             if do_set and (
                     relation == Relation.PROVIDER or relation == Relation.PEER or relation == Relation.ROUTE_SERVER):
+                #print("Returning False ; Second ")
                 return False
 
+        #print("Returning False ; Third; ", super_forward)
         return super_forward

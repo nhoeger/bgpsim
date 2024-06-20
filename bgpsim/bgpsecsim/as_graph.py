@@ -281,20 +281,27 @@ class ASGraph(object):
             asys.reset_routing_table()
 
     def find_routes_to(self, target: AS) -> None:
+        # print("Finding Routes for target AS: ", target.as_id)
         routes: deque = deque()
         for neighbor in target.neighbors:
             # create new route object per neighbor
             routes.append(target.originate_route(neighbor))
-
+        # print("Routes: ", routes)
         # propagate route information in graph
         while routes:
+            # print("Iterating...")
             route = routes.popleft()
+            # print("Route: ", route)
             asys = route.final
-            for neighbor in asys.learn_route(route):
-                # TODO: Check for functionality
-                t = asys.as_id
+            # print("Inspecting AS: ", asys.as_id)
+            a = asys.learn_route(route)
+            # print("List of neighbors: ", a)
+            for neighbor in a:
+                # print("Neighbor: ", neighbor.as_id)
 
                 routes.append(asys.forward_route(route, neighbor))
+                #for elem in routes:
+                    #print("Route: ", elem, "; DO: ", elem.local_data_part_do)
 
     def hijack_n_hops(self, victim: AS, attacker: AS, n: int) -> None:
         if n < 0:

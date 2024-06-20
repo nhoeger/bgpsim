@@ -1,5 +1,5 @@
 #!/bin/bash
-# Execute script with sudo rights, to allow all commands to be executed succesfully
+# Execute script with sudo rights, to allow all commands to be executed successfully
 apt-get update -y
 apt install python3-pip -y
 pip3 install --user pipenv
@@ -10,7 +10,7 @@ apt install git -y
 git clone https://github.com/nhoeger/bgpsim
 #Replace with Name of your repository you cloned to cd inside there
 cd bgpsim 
-#git checkout if neccessary as you need to change the branch of the repository
+#git checkout if necessary as you need to change the branch of the repository
 #git checkout #Name of branch
 #git pull
 pipenv run pip3 list

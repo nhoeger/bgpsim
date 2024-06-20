@@ -981,7 +981,7 @@ def show_policies(graph):
     aspa_policy = 0
     down_only_policy = 0
     only_to_customer = 0
-    show_policies_by_tier(graph)
+    # show_policies_by_tier(graph)
     for asys in graph.asyss:
         if graph.get_asys(asys).policy.name == 'DefaultPolicy':
             default_policy += 1
@@ -989,14 +989,12 @@ def show_policies(graph):
             route_leak_policy += 1
         elif graph.get_asys(asys).policy.name == 'ASPAPolicy':
             aspa_policy += 1
-        elif graph.get_asys(asys).policy.name == 'DownOnlyPolicy':
-            down_only_policy += 1
         elif graph.get_asys(asys).policy.name == 'OnlyToCustomerPolicy':
             only_to_customer += 1
         else:
             raise Exception('ERROR: Unknown policy in play! Policy: ', graph.get_asys(asys).policy.name)
     print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) +
-          '\n ASPA: ' + str(aspa_policy) + '\n DO: ' + str(down_only_policy))
+          '\n ASPA: ' + str(aspa_policy) + '\n OTC: ' + str(only_to_customer))
 
 
 def show_specified_policy(graph, policy_input) -> int:
@@ -1106,6 +1104,7 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
             if graph.get_asys(as_id).policy != ASPAPolicy():
                 graph.get_asys(as_id).policy = policy
+    graph.pol
 
 
 def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
@@ -1146,6 +1145,7 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
         for i in range(0, limit):
             as_id = graph.get_tierThree()[i]
             graph.get_asys(as_id).policy = policy
+    show_policies(graph)
 
 
 def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int, int]):
