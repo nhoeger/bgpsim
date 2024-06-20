@@ -777,7 +777,7 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
                                                                                 tier_two_aspa, tier_three_aspa])
                         app = fmean(temporary_data)
                         return_string += (str(tier_one) + ", " + str(tier_two) + ", 0, 0, " + str(
-                            tier_two_aspa) + ", " + str(tier_three_aspa) + str(app)) + '\n'
+                            tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app)) + '\n'
 
         algorithm = "Combined_ISP"
         return_string += "Changing algorithm to: " + algorithm + '\n'
