@@ -685,8 +685,9 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 # This function starts the evaluation for all OTC/DO related test cases
 def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
+    n_trials = 1
     trials = uniform_random_trials(nx_graph, n_trials)
-    # print("Initializing with following trials: ", trials)
+    '''
     print("Testing Figure 1")
     output_to_parse = figure_roles_1(nx_graph, trials)
     write_results("figure_roles_1_" + str(n_trials), output_to_parse)
@@ -698,6 +699,10 @@ def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Testing Figure 3")
     output_to_parse = figure_roles_3(nx_graph, trials)
     write_results("figure_roles_3_" + str(n_trials), output_to_parse)
+    '''
+    print("Testing Figure 4")
+    output_to_parse = figure_roles_4(nx_graph, trials)
+    write_results("figure_roles_4_" + str(n_trials), output_to_parse)
 
     print("Completed all test cases.")
     deviation_test = False
@@ -781,6 +786,25 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
 
         algorithm = "Combined_ISP"
         return_string += "Changing algorithm to: " + algorithm + '\n'
+
+    return return_string
+
+# Specialized ASPA Deployment for comarison
+def figure_roles_4(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+    steps = 5
+    return_string = "Specialized ASPA deployment."
+    algorithm = "ASPA_ISP"
+    deployments_tier_one = np.arange(0, 101, steps)
+    deployments_tier_two = np.arange(0, 101, steps)
+    deployments_tier_three = np.arange(0, 101, steps)
+
+    for tier_three_aspa in deployments_tier_three:
+        for tier_two_aspa in deployments_tier_two:
+            for tier_one_aspa in deployments_tier_one:
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [tier_three_aspa, tier_two_aspa], trials,
+                                                                  tier_one_aspa, algorithm))
+                return_string += (str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
+                                  + str(app)) + '\n'
 
     return return_string
 
