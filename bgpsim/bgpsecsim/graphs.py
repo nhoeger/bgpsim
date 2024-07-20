@@ -685,7 +685,7 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
-    figure_roles_reduced(nx_graph, trials)
+    # figure_roles_reduced(nx_graph, trials)
     figure_aspa_reduced(nx_graph, trials)
 
 
@@ -795,8 +795,8 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
 
 # Specialized ASPA Deployment for comarison
 def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    steps = 5
     print("Specialized ASPA deployment.")
+    steps = 5
     algorithm = "ASPA_ISP"
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
@@ -805,10 +805,11 @@ def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     for tier_three_aspa in deployments_tier_three:
         for tier_two_aspa in deployments_tier_two:
             for tier_one_aspa in deployments_tier_one:
-                app = fmean(experiments.figure10_down_only_random(nx_graph, [tier_three_aspa, tier_two_aspa], trials,
-                                                                  tier_one_aspa, algorithm))
-                print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app))
-                      + '\n')
+                # experiments.down_only_top_isp(...) -> aspa_deployment_top_isp(...)
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                  [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                   tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app)))
 
 
 # Reduced tests for paper data

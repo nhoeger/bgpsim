@@ -569,9 +569,9 @@ def figure10_down_only_random(
         algorithm: str,
         aspa_deployment=None
 ) -> List[Fraction]:
-    if aspa_deployment is None:
+    # if aspa_deployment is None:
         # 0-2 = policy, 3-5 = object
-        aspa_deployment = [0, 0, 0, 0, 0, 0]
+        # aspa_deployment = [0, 0, 0, 0, 0, 0]
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]],
                                              aspa_deployment, algorithm)
@@ -1188,6 +1188,7 @@ def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int
         for i in range(0, limit):
             as_id = graph.get_tierThree()[i]
             graph.get_asys(as_id).create_new_aspa(graph)
+
 
 def aspa_deployment_random(graph: ASGraph, deployment: [int, int, int, int, int, int]):
     if len(deployment) != 6:
