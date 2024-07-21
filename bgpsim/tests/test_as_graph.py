@@ -242,8 +242,8 @@ class TestASGraph(unittest.TestCase):
         nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
         graph = ASGraph(nx_graph)
         # iterate_through_all()
-        specific_pair(18, 14, graph)
-        print("Done.")
+        # specific_pair(18, 14, graph)
+        # print("Done.")
 
     def test_something_in_detail(self):
         nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)

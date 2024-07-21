@@ -125,3 +125,6 @@ class TestRouteLeakGraph(unittest.TestCase):
             authenticated=False,
             local_data_part_do="",
         )
+        print("Something")
+        a = True
+        assert a is False
