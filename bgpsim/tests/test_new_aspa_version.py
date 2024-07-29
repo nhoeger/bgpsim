@@ -166,7 +166,7 @@ def prepare_policies():
     as1.create_new_aspa(graph)
     as3.create_new_aspa(graph)
     as4.create_new_aspa(graph)
-    as3.policy = OnlyToCustomerPolicy()
+    # as3.policy = OnlyToCustomerPolicy()
 
     print("AS666 Route:     ", as3.policy.accept_route(route_from_666))
     print("AS4 Route:       ", as3.policy.accept_route(route_from_4))

@@ -685,7 +685,7 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
-    # figure_roles_reduced(nx_graph, trials)
+    figure_roles_reduced(nx_graph, trials)
     figure_aspa_reduced(nx_graph, trials)
 
 
@@ -793,14 +793,14 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     return return_string
 
 
-# Specialized ASPA Deployment for comarison
+# Specialized ASPA Deployment for comparison
 def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    print("Specialized ASPA deployment.")
+    print("Specialized ASPA deployment -> ASPA_ISP")
     steps = 5
     algorithm = "ASPA_ISP"
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
-    deployments_tier_three = np.arange(0, 101, steps)
+    deployments_tier_three = [0, 5, 10, 50, 100]
 
     for tier_three_aspa in deployments_tier_three:
         for tier_two_aspa in deployments_tier_two:
