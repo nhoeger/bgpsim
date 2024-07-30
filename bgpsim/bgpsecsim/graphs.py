@@ -798,18 +798,23 @@ def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     print("Specialized ASPA deployment -> ASPA_ISP")
     steps = 5
     algorithm = "ASPA_ISP"
+
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = [0, 5, 10, 50, 100]
 
-    for tier_three_aspa in deployments_tier_three:
-        for tier_two_aspa in deployments_tier_two:
-            for tier_one_aspa in deployments_tier_one:
-                # experiments.down_only_top_isp(...) -> aspa_deployment_top_isp(...)
-                app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
-                                                                  [tier_one_aspa, tier_two_aspa, tier_three_aspa,
-                                                                   tier_one_aspa, tier_two_aspa, tier_three_aspa]))
-                print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app)))
+    for iteration in range(0, 2):
+        for tier_three_aspa in deployments_tier_three:
+            for tier_two_aspa in deployments_tier_two:
+                for tier_one_aspa in deployments_tier_one:
+                    # experiments.down_only_top_isp(...) -> aspa_deployment_top_isp(...)
+                    app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                      [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                       tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                    print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
+                           + str(app)))
+        algorithm = "ASPA_OTC_ISP"
+        print("Changing algorithm to", algorithm)
 
 
 # Reduced tests for paper data

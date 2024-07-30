@@ -14,7 +14,7 @@ from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
     DefaultPolicy, RPKIPolicy, PathEndValidationPolicy,
     BGPsecHighSecPolicy, BGPsecMedSecPolicy, BGPsecLowSecPolicy,
-    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, OnlyToCustomerPolicy
+    RouteLeakPolicy, ASPAPolicy, ASCONESPolicy, OnlyToCustomerPolicy, OTCASPAPolicy
 )
 
 PARALLELISM = 250
@@ -979,7 +979,7 @@ def show_policies(graph):
     default_policy = 0
     route_leak_policy = 0
     aspa_policy = 0
-    down_only_policy = 0
+    otc_aspa = 0
     only_to_customer = 0
     # show_policies_by_tier(graph)
     for asys in graph.asyss:
@@ -991,10 +991,12 @@ def show_policies(graph):
             aspa_policy += 1
         elif graph.get_asys(asys).policy.name == 'OnlyToCustomerPolicy':
             only_to_customer += 1
+        elif graph.get_asys(asys).policy.name == 'OTCASPAPolicy':
+            otc_aspa += 1
         else:
             raise Exception('ERROR: Unknown policy in play! Policy: ', graph.get_asys(asys).policy.name)
     print('Policies counter: \n Default: ' + str(default_policy) + '\n RouteLeak: ' + str(route_leak_policy) +
-          '\n ASPA: ' + str(aspa_policy) + '\n OTC: ' + str(only_to_customer))
+          '\n ASPA: ' + str(aspa_policy) + '\n OTC: ' + str(only_to_customer) + '\n OTC_ASPA: ' + str(otc_aspa))
 
 
 def show_specified_policy(graph, policy_input) -> int:
@@ -1116,6 +1118,15 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
             raise Exception("No ASPA deployment parsed for ASPA deployment!")
         aspa_deployment_top_isp(graph, aspa_input)
         return
+    elif algorithm == "ASPA_OTC":
+        if aspa_input is None:
+            raise Exception("No ASPA deployment parsed for ASPA deployment!")
+        aspa_deployment_top_isp(graph, aspa_input)
+        policy = OTCASPAPolicy()
+        if aspa_input[:3] == aspa_input[3:]:
+            deployment = aspa_input[:3]
+        else:
+            warnings.warn("Please parse specified OTC deployment")
     elif algorithm == "Combined":
         if aspa_input is None:
             raise Exception("No ASPA deployment parsed for combined deployment!")
@@ -1144,7 +1155,7 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
         for i in range(0, limit):
             as_id = graph.get_tierThree()[i]
             graph.get_asys(as_id).policy = policy
-    # show_policies(graph)
+    show_policies(graph)
 
 
 def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int, int]):
@@ -1329,6 +1340,10 @@ class FigureRouteLeakExperimentRandom(Experiment):
 
         elif algorithm == 'ASPA_ISP':
             down_only_top_isp(graph, self.deployment, 'ASPA', self.aspa_deployment)
+
+        elif algorithm == 'ASPA_OTC_ISP':
+            down_only_top_isp(graph, self.deployment, 'ASPA_OTC', self.aspa_deployment)
+
 
         attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
 
