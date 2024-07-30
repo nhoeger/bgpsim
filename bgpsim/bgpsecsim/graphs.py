@@ -682,11 +682,27 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
     return True
 
 
-# This function starts the evaluation for all OTC/DO related test cases
-def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
+def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
     print("Starting OTC evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
-    # print("Initializing with following trials: ", trials)
+    figure_roles_reduced(nx_graph, trials)
+    figure_aspa_reduced(nx_graph, trials)
+
+
+# This function starts the evaluation for all OTC/DO related test cases
+def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
+    deviation_test = True
+    if deviation_test:
+        result_array = []
+        values = [1, 250, 500, 1000, 10000]
+        for i in values:
+            result_array.append(deviation_figure(nx_graph, i))
+        print("ResultArray: ", result_array)
+        create_deviation_figure(result_array)
+
+    print("Starting OTC evaluation...")
+    trials = uniform_random_trials(nx_graph, n_trials)
+
     print("Testing Figure 1")
     output_to_parse = figure_roles_1(nx_graph, trials)
     write_results("figure_roles_1_" + str(n_trials), output_to_parse)
@@ -700,14 +716,6 @@ def otc_figures(filename: str, nx_graph: nx.Graph, n_trials: int):
     write_results("figure_roles_3_" + str(n_trials), output_to_parse)
 
     print("Completed all test cases.")
-    deviation_test = False
-    if deviation_test:
-        result_array = []
-        values = [250, 500, 1000, 10000]
-        for i in values:
-            result_array.append(deviation_figure(nx_graph, i))
-        print("ResultArray: ", result_array)
-        create_deviation_figure(result_array)
 
 
 # Save evaluation results into dedicated text files
@@ -785,10 +793,80 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     return return_string
 
 
+# Specialized ASPA Deployment for comparison
+def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+    print("Specialized ASPA deployment -> ASPA_ISP")
+    steps = 5
+    algorithm = "ASPA_ISP"
+
+    deployments_tier_one = np.arange(0, 101, steps)
+    deployments_tier_two = np.arange(0, 101, steps)
+    deployments_tier_three = [0, 5, 10, 50, 100]
+
+    for iteration in range(0, 2):
+        for tier_three_aspa in deployments_tier_three:
+            for tier_two_aspa in deployments_tier_two:
+                for tier_one_aspa in deployments_tier_one:
+                    # experiments.down_only_top_isp(...) -> aspa_deployment_top_isp(...)
+                    app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                      [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                       tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                    print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
+                           + str(app)))
+        algorithm = "ASPA_OTC_ISP"
+        print("Changing algorithm to", algorithm)
+
+
+# Reduced tests for paper data
+def figure_roles_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+    steps = 5
+    print("Random Reduced Deployment:")
+    algorithm = "OTC"
+    deployments_tier_one = np.arange(0, 101, steps)
+    deployments_tier_two = np.arange(0, 101, steps)
+    deployments_tier_three = np.arange(0, 101, steps)
+
+    for i in range(0, 2):
+        print("Using algorithm: ", algorithm)
+        # Deployment tier 1
+        for j in deployments_tier_one:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials,
+                                                              j, algorithm))
+            print((str(j) + ", " + str(0) + ", " + str(0) + ", " + str(app)))
+
+        # Deployment tier 2
+        for tier_one in [0, 10, 50, 100]:
+            for tier_two in deployments_tier_two:
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [0, tier_two], trials,
+                                                                  tier_one, algorithm))
+                print((str(tier_one) + ", " + str(tier_two) + ", " + str(0) + ", " + str(app)))
+
+            for tier_three in deployments_tier_three:
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [tier_three, 0], trials,
+                                                                  tier_one, algorithm))
+                print((str(tier_one) + ", " + str(0) + ", " + str(tier_three) + ", " + str(app)))
+
+        # Deployment tier 3
+        for j in deployments_tier_three:
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [j, 0], trials,
+                                                              0, algorithm))
+            print((str(0) + ", " + str(0) + ", " + str(j) + ", " + str(app)))
+
+        if algorithm == "OTC_ISP":
+            for tier_one in [50, 100]:
+                for tier_two in [0, 50, 100]:
+                    for tier_three in deployments_tier_three:
+                        app = fmean(experiments.figure10_down_only_random(nx_graph, [tier_three, tier_two], trials,
+                                                                          tier_one, algorithm))
+                        print((str(tier_one) + ", " + str(tier_two) + ", " + str(tier_three) + ", " + str(app)))
+
+        algorithm = "OTC_ISP"
+
+
 def deviation_figure(nx_graph: nx.Graph, n_trials: int) -> list[float]:
     result = []
     print("Trials: ", n_trials)
-    iterations = 1000
+    iterations = 2
     for i in range(iterations):
         progress = i / iterations
         progress_percent = int(progress * 100)
