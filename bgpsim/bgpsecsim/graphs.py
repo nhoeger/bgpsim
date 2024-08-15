@@ -683,10 +683,12 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 
 
 def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
-    print("Starting OTC evaluation...")
+    print("Starting evaluation...")
     trials = uniform_random_trials(nx_graph, n_trials)
+
     figure_roles_reduced(nx_graph, trials)
     figure_aspa_reduced(nx_graph, trials)
+    figure_otc_aspa_combined_random(nx_graph, trials)
 
 
 # This function starts the evaluation for all OTC/DO related test cases
@@ -795,32 +797,72 @@ def figure_roles_3(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
 
 # Specialized ASPA Deployment for comparison
 def figure_aspa_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
-    print("Specialized ASPA deployment -> ASPA_ISP")
+    print("ASPA deployment")
     steps = 5
     algorithm = "ASPA_ISP"
 
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
-    deployments_tier_three = [0, 5, 10, 50, 100]
+    deployments_tier_three = np.arange(0, 101, steps)
 
     for iteration in range(0, 2):
-        for tier_three_aspa in deployments_tier_three:
+        print("Using algorithm: ", algorithm)
+        # Deployment tier 1
+        for tier_one_aspa in deployments_tier_one:
+            tier_two_aspa = 0
+            tier_three_aspa = 0
+            app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+            print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app)))
+
+        # Deployment tier 2
+        for tier_one_aspa in [0, 10, 50, 100]:
             for tier_two_aspa in deployments_tier_two:
-                for tier_one_aspa in deployments_tier_one:
-                    # experiments.down_only_top_isp(...) -> aspa_deployment_top_isp(...)
+                tier_three_aspa = 0
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                  [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                   tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
+                       + str(app)))
+
+            for tier_three_aspa in deployments_tier_three:
+                tier_two_aspa = 0
+                app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
+                                                                  [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                   tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
+                       + str(app)))
+
+        # Deployment tier 3
+        for tier_one_aspa in [0, 50, 100]:
+            for tier_two_aspa in [0, 50, 100]:
+                for tier_three_aspa in deployments_tier_three:
                     app = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, algorithm,
-                                                                      [tier_one_aspa, tier_two_aspa, tier_three_aspa,
-                                                                       tier_one_aspa, tier_two_aspa, tier_three_aspa]))
-                    print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", "
-                           + str(app)))
+                                                                        [tier_one_aspa, tier_two_aspa, tier_three_aspa,
+                                                                        tier_one_aspa, tier_two_aspa, tier_three_aspa]))
+                    print((str(tier_one_aspa) + ", " + str(tier_two_aspa) + ", " + str(tier_three_aspa) + ", " + str(app)))
+
         algorithm = "ASPA_OTC_ISP"
-        print("Changing algorithm to", algorithm)
+        
+
+# Compare randomness
+def figure_otc_aspa_combined_random(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+    # figure_nils_deployment -> figureRouteLeak_experiment_nils -> FigureRouteLeakExperimentNils
+    steps = 5
+    deployments_tier_one = np.arange(0, 101, steps)
+    print("Starting the last test..")
+    for algorithm in ["ASPA", "ASPA_OTC", "OTC"]:
+        print("Algorithm in use:", algorithm)
+        for j in deployments_tier_one:
+            app = fmean(experiments.figure_nils_deployment(nx_graph, [0, 0], trials, j, algorithm))
+            print((str(j) + ", " + str(app)))
 
 
 # Reduced tests for paper data
 def figure_roles_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
     steps = 5
-    print("Random Reduced Deployment:")
+    print("OTC deployment:")
     algorithm = "OTC"
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)

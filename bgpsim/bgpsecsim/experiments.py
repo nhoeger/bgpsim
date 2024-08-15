@@ -9,6 +9,7 @@ import warnings
 from typing import List, Tuple
 import sys
 
+import numpy as np
 from bgpsecsim.asys import Relation, AS, AS_ID
 from bgpsecsim.as_graph import ASGraph
 from bgpsecsim.routing_policy import (
@@ -332,6 +333,39 @@ def figureRouteLeak_experiment_top_isps(
     return results
 
 
+def figureRouteLeak_experiment_nils(
+        graph: ASGraph,
+        trials: List[Tuple[AS_ID, AS_ID]],
+        deployment: List[int],
+        algorithm: str
+) -> List[Fraction]:
+    trial_queue: mp.Queue = mp.Queue()
+    result_queue: mp.Queue = mp.Queue()
+    # Workers are being reused! Meaning that any change in the graph will affect later evaluations within the same worker!
+    # Make sure to reset policies and routing tables when reusing a worker!
+    workers = [FigureRouteLeakExperimentNils(trial_queue, result_queue, graph, deployment, algorithm)
+               for _ in range(PARALLELISM)]
+    for worker in workers:
+        worker.start()
+
+    for trial in trials:
+        trial_queue.put(trial)
+
+    results = []
+    for _ in range(len(trials)):
+        result = result_queue.get()
+        results.append(result)
+
+    for worker in workers:
+        worker.stop()
+    for worker in workers:
+        trial_queue.put(None)
+    for worker in workers:
+        worker.join()
+
+    return results
+
+
 def figureForgedOrigin_experiment_random(
         graph: ASGraph,
         trials: List[Tuple[AS_ID, AS_ID]],
@@ -587,6 +621,19 @@ def figure10_down_only_top_isp(
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
     return figureRouteLeak_experiment_top_isps(graph, trials, [tier_one, deployment[1], deployment[0]],
                                                "DownOnlyTopISP")
+
+
+def figure_nils_deployment(
+        nx_graph: nx.Graph,
+        # deployment over AS per percentage in [tier2, tier3]
+        deployment: [int, int],
+        trials: List[Tuple[AS_ID, AS_ID]],
+        tier_one: int,
+        algorithm: str
+) -> List[Fraction]:
+    graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    return figureRouteLeak_experiment_nils(graph, trials, [tier_one, deployment[1], deployment[0]], algorithm)
+
 
 
 def figure10_down_only_combined(
@@ -1158,6 +1205,28 @@ def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_i
     # show_policies(graph)
 
 
+def single_random_deployment(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
+    if len(deployment) != 3:
+        warnings.warn("Parsed deployment does not match required format.")
+    elif algorithm == "OTC":
+        policy = OnlyToCustomerPolicy()
+    elif algorithm == "ASPA":
+        policy = ASPAPolicy()
+    elif algorithm == "ASPA_OTC":
+        policy = OTCASPAPolicy()
+
+    all_systems = graph.get_tierOne() + graph.get_tierTwo() + graph.get_tierThree()
+    np.random.seed(42)
+    np.random.shuffle(all_systems)
+
+    limit = int(len(all_systems) / 100 * deployment[0])
+    for i in range(0, limit):
+        as_id = all_systems[i]
+        graph.get_asys(as_id).policy = policy
+        if algorithm == "ASPA_OTC" or algorithm == "ASPA":
+            graph.get_asys(as_id).create_new_aspa(graph)
+
+
 def aspa_deployment_top_isp(graph: ASGraph, deployment: [int, int, int, int, int, int]):
     if len(deployment) != 6:
         raise Exception("Parsed deployment does not match requirements!")
@@ -1354,6 +1423,57 @@ class FigureRouteLeakExperimentRandom(Experiment):
         alternative_result = new_success_rate(graph, attacker, victim)
         # print("Alternative Result: ", alternative_result)
         # return result
+        return alternative_result
+
+
+class FigureRouteLeakExperimentNils(Experiment):
+    graph: ASGraph
+    deployment: List[int]
+
+    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: List[int],
+                             algorithm: str, ):
+        super().__init__(input_queue, output_queue)
+        self.graph = graph
+        self.deployment = deployment
+        self.algorithm = algorithm
+
+    def run_trial(self, trial: Tuple[(AS_ID, AS_ID)]):
+        graph = self.graph
+        algorithm = self.algorithm
+
+        # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
+        victim_id, attacker_id = trial
+        graph.reset_policies()
+        graph.clear_rpki_objects()
+
+        # Takes the desired AS as victim out of the full graph by its ID
+        victim = graph.get_asys(victim_id)
+        if victim is None:
+            warnings.warn(f"No AS with ID {victim_id}")
+            return Fraction(0, 1)
+
+        # Takes AS of attacker out of graph, like did for the victim
+        attacker = graph.get_asys(attacker_id)
+        if attacker is None:
+            warnings.warn(f"No AS with ID {attacker_id}")
+            return Fraction(0, 1)
+
+        if algorithm == 'ASPA' or algorithm == 'ASPA_OTC' or algorithm == 'OTC':
+            if self.deployment is None:
+                warnings.warn(f"No deployment parsed!")
+                return Fraction(0, 1)
+            single_random_deployment(graph, self.deployment, algorithm)
+        else:
+            warnings.warn(f"Unknown algorithm parsed!")
+            return Fraction(0, 1)
+
+        attacker.policy = RouteLeakPolicy()
+
+        # starts to find a new routing table and executes the attack onto it by n hops
+        graph.clear_routing_tables()
+        graph.find_routes_to(victim)
+        result = route_leak_success_rate(graph, attacker, victim)
+        alternative_result = new_success_rate(graph, attacker, victim)
         return alternative_result
 
 
