@@ -919,7 +919,7 @@ def deviation_figure(nx_graph: nx.Graph, n_trials: int) -> list[float]:
         # progress_percent = int(progress * 100)
         # progress_bar = "[" + "=" * progress_percent + " " * (100 - progress_percent) + "]"
         trials = uniform_random_trials(nx_graph, n_trials)
-        current = fmean(experiments.figure10_down_only_random(nx_graph, [15, 20], trials, 25, "OTC_ISP"))
+        current = fmean(experiments.figure10_down_only_random(nx_graph, [0, 0], trials, 0, "OTC_ISP"))
         result.append(current)
         # print(f"\rProgress: {progress_bar} {progress_percent}%", end="", flush=True)
     print("\n#----------------------------------------------------------------------------#")
