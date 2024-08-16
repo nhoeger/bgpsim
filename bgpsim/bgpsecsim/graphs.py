@@ -913,14 +913,15 @@ def figure_roles_reduced(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
 def deviation_figure(nx_graph: nx.Graph, n_trials: int) -> list[float]:
     result = []
     iterations = 100
+    print("Iterations: ", iterations)
     for i in range(iterations):
-        progress = i / iterations
-        progress_percent = int(progress * 100)
-        progress_bar = "[" + "=" * progress_percent + " " * (100 - progress_percent) + "]"
+        # progress = i / iterations
+        # progress_percent = int(progress * 100)
+        # progress_bar = "[" + "=" * progress_percent + " " * (100 - progress_percent) + "]"
         trials = uniform_random_trials(nx_graph, n_trials)
         current = fmean(experiments.figure10_down_only_random(nx_graph, [15, 20], trials, 25, "OTC_ISP"))
         result.append(current)
-        print(f"\rProgress: {progress_bar} {progress_percent}%", end="", flush=True)
+        # print(f"\rProgress: {progress_bar} {progress_percent}%", end="", flush=True)
     print("\n#----------------------------------------------------------------------------#")
     return result
 
