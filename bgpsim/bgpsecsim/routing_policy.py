@@ -664,10 +664,12 @@ class OTCASPAPolicy(DefaultPolicy):
         return self.name
 
     def accept_route(self, route: Route) -> bool:
-        super_result = DefaultPolicy().accept_route(route)
-        result_otc = perform_only_to_customer(route)
         result_aspa = perform_ASPA_algorithm(route)
-        return result_otc and not (result_aspa == 'Invalid') and super_result
+        result_otc = perform_only_to_customer(route)
+        if result_otc:
+            return not (result_aspa == 'Invalid')
+        else:
+            return result_otc
 
     def forward_to(self, route: Route, relation: Relation, originating=False) -> bool:
         otc_forward = OnlyToCustomerPolicy().forward_to(route, relation, originating)

@@ -163,13 +163,13 @@ class AS(object):
             authenticated=self.bgp_sec_enabled,
             local_data_part_do="",
         )
-        if str(self.policy) == "OnlyToCustomerPolicy":
+        if str(self.policy) == "OnlyToCustomerPolicy" or str(self.policy) == "OTCASPAPolicy":
             relation_to_sender = self.get_relation(next_hop)
             self.policy.forward_to(route_to_return, relation_to_sender, True)
         return route_to_return
 
     def forward_route(self, route: 'Route', next_hop: 'AS') -> 'Route':
-        if str(self.policy) == "OnlyToCustomerPolicy":
+        if str(self.policy) == "OnlyToCustomerPolicy" or str(self.policy) == "OTCASPAPolicy":
             relation_to_sender = route.final.get_relation(next_hop)
             current_as = route.final
             current_as.policy.forward_to(route, relation_to_sender)
