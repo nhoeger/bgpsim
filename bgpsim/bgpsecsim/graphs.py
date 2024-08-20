@@ -1,3 +1,4 @@
+import ast
 import sys
 from fractions import Fraction
 import itertools
@@ -16,7 +17,7 @@ from numpy import asarray
 from numpy import savetxt
 import pickle as pkl
 from timeit import default_timer as timer
-from datetime import timedelta
+import datetime
 
 from bgpsecsim.asys import AS_ID
 import bgpsecsim.as_graph as as_graph
@@ -683,9 +684,20 @@ def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
 
 
 def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
-    print("Starting evaluation...")
-    trials = uniform_random_trials(nx_graph, n_trials)
-
+    use_old_trials = True
+    if use_old_trials:
+        with open(filename) as file:
+            trials_string = file.read()
+            trials = ast.literal_eval(trials_string)
+            if not isinstance(trials, list):
+                raise ValueError("File is contains no list.")
+            for trial in trials:
+                if not isinstance(trial, tuple):
+                    raise ValueError("One or more elements of the file are not tuples.")
+    else:
+        trials = uniform_random_trials(nx_graph, n_trials)
+        file_name = str(n_trials) + "-trials"
+        write_results(file_name, str(trials))
     figure_roles_reduced(nx_graph, trials)
     figure_aspa_reduced(nx_graph, trials)
     figure_otc_aspa_combined_random(nx_graph, trials)
@@ -1038,7 +1050,7 @@ def figure11(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.datetime.timedelta(seconds=end - start))
 
 
 # ASPA Selection Strategy: top-to-bottom object creation, top-to-bottom policy assignment
@@ -1082,7 +1094,7 @@ def figure12(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # Standard Deviation
@@ -1133,7 +1145,7 @@ def figure13(filename: str, nx_graph: nx.Graph, n_trials: int):
     # data = np.load(filename + '.npy') # Load numpy array
 
     end = timer()
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
     ten_trials_mean = np.mean(overall_results[0])
     hundred_trials_mean = np.mean(overall_results[1])
@@ -1206,7 +1218,7 @@ def figure13(filename: str, nx_graph: nx.Graph, n_trials: int):
     plt.savefig(filename + '.svg', format="svg")
 
     end = timer()
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASPA Selection Strategy: bottom-to-top object creation, top-to-bottom policy assignment
@@ -1249,7 +1261,7 @@ def figure14(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASPA Selection Strategy: top-to-bottom object creation, top-to-bottom policy assignment
@@ -1298,7 +1310,7 @@ def figure15(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASPA Selection Strategy: top-to-bottom object creation, top-to-bottom policy assignment
@@ -1347,7 +1359,7 @@ def figure16(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASPA Selection Strategy: bottom-to-top object creation, top-to-bottom policy assignment
@@ -1398,7 +1410,7 @@ def figure17(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASCones Selection Strategy: Random object creation, random policy assignment
@@ -1445,7 +1457,7 @@ def figure30(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASCONES Selection Strategy: top-to-bottom object creation, top-to-bottom policy assignment
@@ -1488,7 +1500,7 @@ def figure31(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # ASCONES Selection Strategy: bottom-to-top object creation, top-to-bottom policy assignment
@@ -1532,7 +1544,7 @@ def figure32(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # Path manipulation attack - Forged-origin prefix hijack with ASPA protection (random objects and policy deployment)
@@ -1614,7 +1626,7 @@ def figure40(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # TODO: Start this figure without any SEED parameter - otherwise all trials will be the same!!
@@ -1736,7 +1748,7 @@ def figure42(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # Path manipulation attack - Forged-origin prefix hijack with ASPA protection - Objects BottomToTop, Policy TopToBottom Selection Strategy
@@ -1818,7 +1830,7 @@ def figure43(filename: str, nx_graph: nx.Graph, n_trials: int):
 
     end = timer()
 
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # Path manipulation attack - Forged-origin prefix hijack with ASPA protection - Objects TopToBottom, Policy BottomToTop Selection Strategy
@@ -1845,7 +1857,7 @@ def figure44(filename: str, nx_graph: nx.Graph, n_trials: int):
     np.save(filename, results)  # Save numpy array for later use
 
     end = timer()
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # Path manipulation attack - Forged-origin prefix hijack with ASPA protection - Objects BottomToTop, Policy BottomToTop Selection Strategy
@@ -1872,7 +1884,7 @@ def figure45(filename: str, nx_graph: nx.Graph, n_trials: int):
     np.save(filename, results)  # Save numpy array for later use
 
     end = timer()
-    print(timedelta(seconds=end - start))
+    print(datetime.timedelta(seconds=end - start))
 
 
 # This function prints the results for 0%object and 0% policy ASPA deployment to find a correct seed that is within the mean identified in the deviations figure.
