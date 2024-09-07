@@ -700,7 +700,6 @@ def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
         write_results(file_name, str(trials))
     figure_roles_reduced(nx_graph, trials)
     figure_aspa_reduced(nx_graph, trials)
-    figure_otc_aspa_combined_random(nx_graph, trials)
 
 
 # This function starts the evaluation for all OTC/DO related test cases
