@@ -238,12 +238,16 @@ def colourful_graph(victim: str, attacker: str, graph: ASGraph):
 
 
 class TestASGraph(unittest.TestCase):
+    # Test new AS selection -> not by tier but by customer cone 
     def test_something(self):
+        print("\n[i] Creating AS Graph")
+        AS_REL_FILEPATH = "/home/user/Dokumente/Projects/bgpsim/bgpsim/caida-data/20250601.as-rel.txt"
+        print("[i] Parsing AS Relations File: ", AS_REL_FILEPATH)
         nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
         graph = ASGraph(nx_graph)
-        # iterate_through_all()
-        # specific_pair(18, 14, graph)
-        # print("Done.")
+        print("[i] Demo AS: ", graph.get_asys("1"))
+        print("[i] AS Graph created with ",len(graph.asyss)," ASes.")
+        
 
     def test_something_in_detail(self):
         nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)

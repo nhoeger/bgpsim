@@ -649,57 +649,55 @@ def figure10(filename: str, nx_graph: nx.Graph, n_trials: int, tierOne: int):
     plt.savefig(filename)
 
 
-def figure10_3d(filename: str, nx_graph: nx.Graph, n_trials: int):
-    trials = uniform_random_trials(nx_graph, n_trials)
 
-    deploymentsTierThree = np.arange(0, 101, 5)
-    deploymentsTierTwo = np.arange(0, 101, 5)
-    deploymentsTierOne = np.arange(0, 101, 5)
+# CUSTOMER CONE FUNCTIONALITY 
+# NEW 
+def test_customer_cone(filename: str, nx_graph: nx.Graph, n_trials: int):
+    # Create graph
+    print("\n[i] Creating AS Graph")
+    AS_REL_FILEPATH = "/home/user/Dokumente/Projects/bgpsim/bgpsim/caida-data/20250601.as-rel.txt"
+    print("[i] Parsing AS Relations File: ", AS_REL_FILEPATH)
+    nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
+    
+    # Evaluate deviation depending on the number of trials
+    deviation_test = False 
+    continue_after_deviation = True
+    if deviation_test:
+        print("[i] Starting Deviation Test.")
+        result_array = []
+        values = [1, 250, 500, 1000, 2000]
+        for i in values:
+            results_for_current_iteration = deviation_figure(nx_graph, i)
+            result_array.append(results_for_current_iteration)
+            print("[i] I: ", i, "; ", results_for_current_iteration)
+        create_deviation_figure(result_array)
 
-    line1_results = []
-    for deployment in deploymentsTierThree:
-        for deployment2 in deploymentsTierTwo:
-            for deployment3 in deploymentsTierOne:
-                print(f"ASPA deployment = {deployment3, deployment2, deployment})")
-                line1_results.append(
-                    fmean(experiments.figure10_aspa(nx_graph, [deployment, deployment2], trials, deployment3)))
-        data_between = np.asarray(line1_results)
-        np.savetxt(filename + '_backup' + str(deployment) + '.csv', data_between, delimiter=',')
-
-    data = np.asarray(line1_results)
-    np.savetxt(filename + '.csv', data, delimiter=',')
-
-    print(line1_results)
-
-    # eval.evaluate(data, filename, 10)
-
-
-def compare_input_return_if_same(result_one: [int], result_two: [int]) -> bool:
-    if len(result_one) != len(result_two):
-        return False
-    for i in range(0, len(result_one)):
-        if result_one[i] != result_two[i]:
-            return False
-    return True
-
-
-def improved_performance_test(filename: str, nx_graph: nx.Graph, n_trials: int):
-    use_old_trials = True
-    if use_old_trials:
-        with open(filename) as file:
-            trials_string = file.read()
-            trials = ast.literal_eval(trials_string)
-            if not isinstance(trials, list):
-                raise ValueError("File is contains no list.")
-            for trial in trials:
-                if not isinstance(trial, tuple):
-                    raise ValueError("One or more elements of the file are not tuples.")
-    else:
+    if continue_after_deviation:
+        print("[i] Starting Evaluation for", n_trials, "trials.")
         trials = uniform_random_trials(nx_graph, n_trials)
-        file_name = str(n_trials) + "-trials"
-        write_results(file_name, str(trials))
-    figure_roles_reduced(nx_graph, trials)
-    figure_aspa_reduced(nx_graph, trials)
+
+        # TODO: Add transitiveBGPsec 
+        for algorithm in ["ASPA", "OTC"]:
+            print("[i] Starting evaluation for algorithm:", algorithm)
+            
+            # Tier Deployment
+            print("[i] Starting tier deployment.")
+            output_to_parse = tier_deployment(nx_graph, trials, algorithm + "_ISP")
+            print("[i] Result for tier deployment: ", output_to_parse)
+            #write_results("tier_deployment_" + algorithm + "_" + str(n_trials), output_to_parse)
+
+            # Customer Cone Deployment
+            print("[i] Starting customer cone deployment.")
+            output_to_parse = cone_deployment(nx_graph, trials, algorithm + "_CC")
+            print("[i] Output to parse: ", output_to_parse)
+            
+            # write_results("customer_cone_deployment_" + algorithm + "_" + str(n_trials), output_to_parse)
+            # TODO remove 
+            break
+        print("[i] Done.")
+
+
+
 
 
 # This function starts the evaluation for all OTC/DO related test cases
@@ -743,22 +741,34 @@ def write_results(file_name: str, input_string: str):
 
 # Increase deployment of otc for each tier starting with tier one, finishing with tier three
 # For each tier iteration, the previous tier(s) gets redeployed as well
-# Steps: 1 %
-def figure_roles_1(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]]):
+# Steps: 10 %
+def tier_deployment(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]], algorithm: str):
     steps = 10
     deployments_tier_one = np.arange(0, 101, steps)
     deployments_tier_two = np.arange(0, 101, steps)
     deployments_tier_three = np.arange(0, 101, steps)
-    algorithm = "OTC"
-    return_string = "Figure 1" + '\n'
+    return_string = "tier_deployment_" + algorithm + '\n'
     for deployment_three in deployments_tier_three:
         for deployment_two in deployments_tier_two:
             for deployment_one in deployments_tier_one:
+                print(f"Deployment: {deployment_one}, {deployment_two}, {deployment_three}")
                 app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment_three, deployment_two], trials,
                                                                   deployment_one, algorithm))
                 return_string += (str(deployment_one) + ", " + str(deployment_two) + ", " + str(deployment_three) + ", "
                                   + str(app)) + '\n'
+                
     return return_string
+
+def cone_deployment(nx_graph: nx.Graph, trials: List[Tuple[AS_ID, AS_ID]], algorithm: str):
+    # Customer cone file 
+    print("[i] Cone deployment for ", algorithm)
+    customer_cone_file = "/home/user/Dokumente/Projects/bgpsim/bgpsim/customer_cone/ases_ordered_by_customer_cone.txt"
+    tier_one = 0
+    deployment = [10, 0, 0]  
+    app = fmean(experiments.figure10_down_only_random(nx_graph, [deployment[0], deployment[0]], trials,
+                                                                  deployment[0], algorithm))     
+    return app
+
 
 
 # Select top ISPs

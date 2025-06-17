@@ -607,6 +607,10 @@ def figure10_down_only_random(
         # 0-2 = policy, 3-5 = object
         # aspa_deployment = [0, 0, 0, 0, 0, 0]
     graph = ASGraph(nx_graph, policy=DefaultPolicy())
+    # Debug graph 
+    # ot the folwing deployment:
+    print("[i] Starting DownOnlyRandom experiment with parameters:", deployment, "and tier_one:", tier_one)
+    print("[i] Turning it into", [tier_one, deployment[1], deployment[0]])
     return figureRouteLeak_experiment_random(graph, trials, [tier_one, deployment[1], deployment[0]],
                                              aspa_deployment, algorithm)
 
@@ -1117,6 +1121,80 @@ def create_ASCONES_objects_randomly(graph, deployment_ASCONES_objects):
         graph.get_asys(as_id).create_new_ascones()
         # graph.get_asys(as_id).create_dummy_aspa()
 
+def deploy_customer_cones(graph, deployment, algorithm):
+    if algorithm == "OTC":
+        policy = OnlyToCustomerPolicy()
+    elif algorithm == "ASPA":
+        policy = ASPAPolicy()
+    elif algorithm == "OTC_ASPA":
+        policy = OTCASPAPolicy()
+    elif algorithm == "TransitiveBGPsec":
+        policy = TransitiveBGPsecPolicy()
+    else:
+        warnings.warn("No valid algorithm parsed.")
+        return
+    
+    # Important: In customer cone deployment, the deployment refers not to the percentage 
+    # but the number of ASes that will be changed. 
+    print("[i] Altering", deployment[0], "ASes in customer cone deployment.")
+    print("[i] Using policy:", policy.name)
+    customer_cone_file = "/home/user/Dokumente/Projects/bgpsim/bgpsim/customer_cone/ases_ordered_by_customer_cone.txt"
+    with open(customer_cone_file, "r") as file:
+        lines = file.readlines()        
+        for i in range(deployment[0]):
+            current_as = int(lines[i].strip())
+            graph.get_asys(str(current_as)).policy = policy
+    # show_policies(graph)            
+
+
+def deploy_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
+    print("[i] Top ISP deployment with parameters:", deployment, "and algorithm:", algorithm)
+    if len(deployment) != 3:
+        warnings.warn("Parsed deployment does not match required format.")
+        return
+    if algorithm == "OTC":
+        policy = OnlyToCustomerPolicy()
+    elif algorithm == "ASPA":
+        policy = ASPAPolicy()
+    elif algorithm == "OTC_ASPA":
+        policy = OTCASPAPolicy()
+    elif algorithm == "TransitiveBGPsec":
+        policy = TransitiveBGPsecPolicy()
+    else:
+        warnings.warn("No valid algorithm parsed.")
+        return
+
+    tier_one = deployment[0]
+    tier_two = deployment[1]
+    tier_three = deployment[2]
+    tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
+    tier_two_top_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
+    if tier_one != 0:
+        for as_object in tier_one_top_isp:
+            as_number = as_object.as_id
+            if graph.get_asys(as_number).policy != ASPAPolicy():
+                graph.get_asys(as_number).policy = policy
+            else: 
+                graph.get_asys(as_number).policy = policy
+                graph.get_asys(as_number).create_new_aspa(graph)
+    if tier_two != 0:
+        for as_object in tier_two_top_isp:
+            as_number = as_object.as_id
+            if graph.get_asys(as_number).policy != ASPAPolicy():
+                graph.get_asys(as_number).policy = policy
+            else: 
+                graph.get_asys(as_number).policy = policy
+                graph.get_asys(as_number).create_new_aspa(graph)
+    if tier_three != 0:
+        limit = int(len(graph.get_tierThree()) / 100 * tier_three)
+        for i in range(0, limit):
+            as_id = graph.get_tierThree()[i]
+            graph.get_asys(as_id).policy = policy
+        else: 
+            graph.get_asys(as_number).policy = policy
+            graph.get_asys(as_number).create_new_aspa(graph)
+    # show_policies(graph)
+
 
 def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
     # print("Input deployment: ", deployment)
@@ -1153,56 +1231,6 @@ def do_otc_randomly(graph, deployment: [int, int, int], algorithm: str, aspa_inp
         for as_id in random.sample(graph.get_tierThree(), int(len(graph.get_tierThree()) / 100 * tier_three)):
             if graph.get_asys(as_id).policy != ASPAPolicy():
                 graph.get_asys(as_id).policy = policy
-
-
-def down_only_top_isp(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
-    if len(deployment) != 3:
-        warnings.warn("Parsed deployment does not match required format.")
-    elif algorithm == "OTC":
-        policy = OnlyToCustomerPolicy()
-    elif algorithm == "ASPA":
-        if aspa_input is None:
-            raise Exception("No ASPA deployment parsed for ASPA deployment!")
-        aspa_deployment_top_isp(graph, aspa_input)
-        return
-    elif algorithm == "ASPA_OTC":
-        if aspa_input is None:
-            raise Exception("No ASPA deployment parsed for ASPA deployment!")
-        aspa_deployment_top_isp(graph, aspa_input)
-        policy = OTCASPAPolicy()
-        if aspa_input[:3] == aspa_input[3:]:
-            deployment = aspa_input[:3]
-        else:
-            warnings.warn("Please parse specified OTC deployment")
-    elif algorithm == "Combined":
-        if aspa_input is None:
-            raise Exception("No ASPA deployment parsed for combined deployment!")
-        aspa_deployment_top_isp(graph, aspa_input)
-        policy = OnlyToCustomerPolicy()
-    else:
-        warnings.warn("No valid algorithm parsed.")
-
-    tier_one = deployment[0]
-    tier_two = deployment[1]
-    tier_three = deployment[2]
-    tier_one_top_isp = graph.identify_top_isp_from_tier_one(int(len(graph.get_tierOne()) / 100 * tier_one))
-    tier_two_top_isp = graph.identify_top_isp_from_tier_two(int(len(graph.get_tierTwo()) / 100 * tier_two))
-    if tier_one != 0:
-        for as_object in tier_one_top_isp:
-            as_number = as_object.as_id
-            if graph.get_asys(as_number).policy != ASPAPolicy():
-                graph.get_asys(as_number).policy = policy
-    if tier_two != 0:
-        for as_object in tier_two_top_isp:
-            as_number = as_object.as_id
-            if graph.get_asys(as_number).policy != ASPAPolicy():
-                graph.get_asys(as_number).policy = policy
-    if tier_three != 0:
-        limit = int(len(graph.get_tierThree()) / 100 * tier_three)
-        for i in range(0, limit):
-            as_id = graph.get_tierThree()[i]
-            graph.get_asys(as_id).policy = policy
-    # show_policies(graph)
 
 
 def single_random_deployment(graph, deployment: [int, int, int], algorithm: str, aspa_input=None):
@@ -1385,96 +1413,27 @@ class FigureRouteLeakExperimentRandom(Experiment):
         if attacker is None:
             warnings.warn(f"No AS with ID {attacker_id}")
             return Fraction(0, 1)
+        
+        if self.deployment is None:
+            warnings.warn(f"No deployment parsed!")
+            return Fraction(0, 1)
+        
+        method_to_use = algorithm.split('_')[1]
+        algorithm = algorithm.split('_')[0]
 
-        elif algorithm == 'OTC':
-            if self.deployment is None:
-                warnings.warn(f"No deployment parsed!")
-                return Fraction(0, 1)
-            do_otc_randomly(graph, self.deployment, algorithm)
+        print("[i] Parsed datat: ", algorithm, method_to_use, self.deployment, self.aspa_deployment)
+        if method_to_use == 'CC': 
+            deploy_customer_cones(graph, self.deployment, algorithm)
+        elif method_to_use == 'ISP':
+            deploy_top_isp(graph, self.deployment, algorithm, self.aspa_deployment)
 
-        elif algorithm == 'OTC_ISP':
-            if self.deployment is None:
-                warnings.warn(f"No deployment parsed!")
-                return Fraction(0, 1)
-            down_only_top_isp(graph, self.deployment, 'OTC', self.aspa_deployment)
-
-        elif algorithm == 'Combined':
-            do_otc_randomly(graph, self.deployment, algorithm, self.aspa_deployment)
-
-        elif algorithm == 'Combined_ISP':
-            down_only_top_isp(graph, self.deployment, 'Combined', self.aspa_deployment)
-
-        elif algorithm == 'ASPA':
-            do_otc_randomly(graph, self.aspa_deployment, algorithm)
-
-        elif algorithm == 'ASPA_ISP':
-            down_only_top_isp(graph, self.deployment, 'ASPA', self.aspa_deployment)
-
-        elif algorithm == 'ASPA_OTC_ISP':
-            down_only_top_isp(graph, self.deployment, 'ASPA_OTC', self.aspa_deployment)
-
-
-        attacker.policy = RouteLeakPolicy()  # This will change the attackers policy to leak all routes
-
-        # starts to find a new routing table and executes the attack onto it by n hops
+        attacker.policy = RouteLeakPolicy()  
         graph.clear_routing_tables()
         graph.find_routes_to(victim)
-        result = route_leak_success_rate(graph, attacker, victim)
-        alternative_result = new_success_rate(graph, attacker, victim)
-        # print("Alternative Result: ", alternative_result)
-        # return result
-        return alternative_result
+        result = new_success_rate(graph, attacker, victim)
+        return result
 
 
-class FigureRouteLeakExperimentNils(Experiment):
-    graph: ASGraph
-    deployment: List[int]
-
-    def __init__(self, input_queue: mp.Queue, output_queue: mp.Queue, graph: ASGraph, deployment: List[int],
-                             algorithm: str, ):
-        super().__init__(input_queue, output_queue)
-        self.graph = graph
-        self.deployment = deployment
-        self.algorithm = algorithm
-
-    def run_trial(self, trial: Tuple[(AS_ID, AS_ID)]):
-        graph = self.graph
-        algorithm = self.algorithm
-
-        # Takes the value passed by the function call by "trial" and assigns them to victim and attacker
-        victim_id, attacker_id = trial
-        graph.reset_policies()
-        graph.clear_rpki_objects()
-
-        # Takes the desired AS as victim out of the full graph by its ID
-        victim = graph.get_asys(victim_id)
-        if victim is None:
-            warnings.warn(f"No AS with ID {victim_id}")
-            return Fraction(0, 1)
-
-        # Takes AS of attacker out of graph, like did for the victim
-        attacker = graph.get_asys(attacker_id)
-        if attacker is None:
-            warnings.warn(f"No AS with ID {attacker_id}")
-            return Fraction(0, 1)
-
-        if algorithm == 'ASPA' or algorithm == 'ASPA_OTC' or algorithm == 'OTC':
-            if self.deployment is None:
-                warnings.warn(f"No deployment parsed!")
-                return Fraction(0, 1)
-            single_random_deployment(graph, self.deployment, algorithm)
-        else:
-            warnings.warn(f"Unknown algorithm parsed!")
-            return Fraction(0, 1)
-
-        attacker.policy = RouteLeakPolicy()
-
-        # starts to find a new routing table and executes the attack onto it by n hops
-        graph.clear_routing_tables()
-        graph.find_routes_to(victim)
-        result = route_leak_success_rate(graph, attacker, victim)
-        alternative_result = new_success_rate(graph, attacker, victim)
-        return alternative_result
 
 
 class FigureRouteLeakExperiment(Experiment):

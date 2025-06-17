@@ -1,0 +1,32 @@
+Loaded graph
+
+[i] Creating AS Graph
+[i] Parsing AS Relations File:  /home/user/Dokumente/Projects/bgpsim/bgpsim/caida-data/20250601.as-rel.txt
+[i] Starting Evaluation for 1 trials.
+[i] Starting evaluation for algorithm: ASPA
+[i] Starting tier deployment.
+Deployment: 0, 0, 0
+[i] Starting DownOnlyRandom experiment with parameters: [np.int64(0), np.int64(0)] and tier_one: 0
+[i] Turning it into [np.int64(0), np.int64(0), np.int64(0)]
+[i] Parsed datat:  ASPA ISP [np.int64(0), np.int64(0), np.int64(0)] None
+[i] Top ISP deployment with parameters: [np.int64(0), np.int64(0), np.int64(0)] and algorithm: ASPA
+Policies counter: 
+ Default: 78139
+ RouteLeak: 0
+ ASPA: 0
+ OTC: 0
+ OTC_ASPA: 0
+Deployment: 10, 0, 0
+[i] Starting DownOnlyRandom experiment with parameters: [np.int64(0), np.int64(0)] and tier_one: 10
+[i] Turning it into [np.int64(10), np.int64(0), np.int64(0)]
+[i] Parsed datat:  ASPA ISP [np.int64(10), np.int64(0), np.int64(0)] None
+[i] Top ISP deployment with parameters: [np.int64(10), np.int64(0), np.int64(0)] and algorithm: ASPA
+Policies counter: 
+ Default: 78126
+ RouteLeak: 0
+ ASPA: 13
+ OTC: 0
+ OTC_ASPA: 0
+Deployment: 20, 0, 0
+[i] Starting DownOnlyRandom experiment with parameters: [np.int64(0), np.int64(0)] and tier_one: 20
+[i] Turning it into [np.int64(20), np.int64(0), np.int64(0)]
