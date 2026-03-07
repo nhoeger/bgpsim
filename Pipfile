@@ -1,16 +1,18 @@
 [[source]]
+name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-name = "pypi"
-
-[packages]
-numpy = "*"
-matplotlib = "*"
-networkx = "*"
-colorama = "*"
 
 [dev-packages]
+mypy = "*"
+jupyter = "*"
+
+[packages]
+click = "*"
+matplotlib = "*"
+networkx = "*"
+numpy = "*"
+jupyter = "*"
 
 [requires]
-python_version = "3.9"
-python_full_version = "3.9.18"
+python_version = "3.12"
