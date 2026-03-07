@@ -7,16 +7,22 @@ Version extended by:
 
 ## Setup
 - Install Python 3.8+
-- Install pip3 
-- Install [Pipenv](https://pipenv.pypa.io/en/latest/)
-- Install required packages inside pipenv
-  - click
-  - networkx
-  - matplotlib
-
-For fast setup the attatched file "SetupSkript.bash" can be used to install all required applications and packages. Before execution customize the file with your personal parameters. In the file there are comments in the places that need to be adjusted.
-
+- Install pip3
+- Install required packages:
+```bash
+$ pip install -r requirements.txt
+```
 Written and tested with Ubuntu 20.04.5 LTS
+
+## Quickstart
+
+Run these commands from the repository root:
+
+```bash
+$ pip install -r requirements.txt
+$ python -m unittest
+$ python -m bgpsecsim
+```
 
 ## Commands
 Simulation environment is run by command line utility
@@ -27,13 +33,13 @@ Before first start the unittests can be ran to check for correct operation of th
 Run the tests:
 
 ```bash
-$ pipenv run python -m unittest
+$ python -m unittest
 ```
 
 To run the simulation by command line utility use:
 
 ```bash
-$ pipenv run python -m bgpsecsim
+$ python -m bgpsecsim
 ```
 
 After execution of the command, the four possible command arguments will be shown according to the cli.py:
@@ -57,7 +63,7 @@ Several parameters have to be specified and passed along with the command:
 
 Example command (runs figure3a with 100 trials)
 ```bash
-$ pipenv run python -m bgpsecsim generate --trials 100 figure3a caida-data/20221101.as-rel.txt outputs/figure3a_100trials
+$ python -m bgpsecsim generate --trials 100 figure3a caida-data/20221101.as-rel.txt outputs/figure3a_100trials
 ```
 
 ## Evaluation
@@ -76,7 +82,7 @@ Several parameters have to be specified and passed along with the command:
 - threshold: Integer, represents percentage
 
 ```bash
-$ pipenv run python -m bgpsecsim evaluate results.csv graphic -threshold 15
+$ python -m bgpsecsim evaluate results.csv graphic -threshold 15
 ```
 
 

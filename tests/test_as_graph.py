@@ -241,7 +241,7 @@ class TestASGraph(unittest.TestCase):
     # Test new AS selection -> not by tier but by customer cone 
     def test_something(self):
         print("\n[i] Creating AS Graph")
-        AS_REL_FILEPATH = "/home/user/Dokumente/Projects/bgpsim/bgpsim/caida-data/20250601.as-rel.txt"
+        AS_REL_FILEPATH = "./caida-data/20250601.as-rel.txt"
         print("[i] Parsing AS Relations File: ", AS_REL_FILEPATH)
         nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
         graph = ASGraph(nx_graph)

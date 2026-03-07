@@ -1,0 +1,6 @@
+click
+matplotlib
+networkx
+numpy
+jupyter
+mypy
