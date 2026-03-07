@@ -655,7 +655,7 @@ def figure10(filename: str, nx_graph: nx.Graph, n_trials: int, tierOne: int):
 def test_customer_cone(filename: str, nx_graph: nx.Graph, n_trials: int):
     # Create graph
     print("\n[i] Creating AS Graph")
-    AS_REL_FILEPATH = "/home/user/Dokumente/Projects/bgpsim/bgpsim/caida-data/20250601.as-rel.txt"
+    AS_REL_FILEPATH = "./caida-data/20250601.as-rel.txt"
     print("[i] Parsing AS Relations File: ", AS_REL_FILEPATH)
     nx_graph = as_graph.parse_as_rel_file(AS_REL_FILEPATH)
     
