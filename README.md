@@ -94,6 +94,7 @@ They can be added to the evaluation by removing the comment brackets.
 ## Notes:
 - The worker threads are being reused. Make sure to reset everything to Default when starting a new experiment. Otherwise, the previously altered graph will apply to the new simulation run.
 - We added the RouteLeakExperiment class
+- We added the Only To Customer (OTC) policy 
 - Implemented ASPA algorithm
 - Added unit tests for ASPA
 
