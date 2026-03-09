@@ -7,7 +7,6 @@ import random
 import signal
 import warnings
 from typing import List, Tuple
-import sys
 
 import numpy as np
 from bgpsecsim.asys import Relation, AS, AS_ID
