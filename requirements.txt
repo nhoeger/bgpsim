@@ -4,3 +4,4 @@ networkx
 numpy
 jupyter
 mypy
+pytest=9.0.3
