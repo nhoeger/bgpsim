@@ -58,7 +58,7 @@ class TestROVGraph(unittest.TestCase):
         # Check a random host AS (e.g., AS9) to see if it has a route to the target AS
         host_as_id = '9'
         host_asys = graph.get_asys(host_as_id)
-        if host_asys is not None and target_asys is not None:
+        if host_asys is not None:
             print(f"Routing Table for AS{host_as_id}: {host_asys.routing_table}")
         
 
