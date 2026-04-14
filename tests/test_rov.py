@@ -18,7 +18,7 @@ class TestROVGraph(unittest.TestCase):
 
         # Load rovista scores from caida-data/asn_rov_scores.csv into a dictionary
         rovista_scores = {}
-        with open(os.path.join(os.path.dirname(__file__), '../caida-data', 'asn_rov_scores.csv'), 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), '../caida-data', 'asn_rov_scores_cleaned.csv'), 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 asn = row.get('ASN')
@@ -53,13 +53,13 @@ class TestROVGraph(unittest.TestCase):
         target_as_id = '7' 
         target_asys = graph.get_asys(target_as_id)
         if target_asys is not None:
-            route = graph.find_routes_to(target_asys)
+            graph.find_routes_to(target_asys)
             
         # Check a random host AS (e.g., AS9) to see if it has a route to the target AS
         host_as_id = '9'
         host_asys = graph.get_asys(host_as_id)
         if host_asys is not None and target_asys is not None:
-            print(host_asys.routing_table)
+            print(f"Routing Table for AS{host_as_id}: {host_asys.routing_table}")
         
 
 
